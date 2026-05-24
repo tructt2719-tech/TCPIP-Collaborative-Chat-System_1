@@ -16,7 +16,7 @@ namespace TCPIP_Collaborative_Chat_System
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form_Startup());
+            Application.Run(new StartupForm());
         }
     }
 }

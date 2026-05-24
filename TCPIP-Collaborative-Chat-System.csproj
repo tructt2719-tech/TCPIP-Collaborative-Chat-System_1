@@ -46,11 +46,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Forms\Form_Startup.cs">
+    <Compile Include="Forms\StartupForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\Form_Startup.Designer.cs">
-      <DependentUpon>Form_Startup.cs</DependentUpon>
+    <Compile Include="Forms\StartupForm.Designer.cs">
+      <DependentUpon>StartupForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Models\MessageModel.cs" />
     <Compile Include="Models\PacketModel.cs" />
@@ -60,17 +60,17 @@
     <Compile Include="Network\TcpChatServer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Forms\TCP_Chat_Client.cs">
+    <Compile Include="Forms\TcpChatClientForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\TCP_Chat_Client.Designer.cs">
-      <DependentUpon>TCP_Chat_Client.cs</DependentUpon>
+    <Compile Include="Forms\TcpChatClientForm.Designer.cs">
+      <DependentUpon>TcpChatClientForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\TCP_Chat_Server.cs">
+    <Compile Include="Forms\TcpChatServerForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\TCP_Chat_Server.Designer.cs">
-      <DependentUpon>TCP_Chat_Server.cs</DependentUpon>
+    <Compile Include="Forms\TcpChatServerForm.Designer.cs">
+      <DependentUpon>TcpChatServerForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Services\MessageService.cs" />
     <Compile Include="Services\UIService.cs" />
@@ -79,8 +79,8 @@
     <Compile Include="Shared\PacketParser.cs" />
     <Compile Include="Shared\PacketTypes.cs" />
     <Compile Include="Utils\UIHelper.cs" />
-    <EmbeddedResource Include="Forms\Form_Startup.resx">
-      <DependentUpon>Form_Startup.cs</DependentUpon>
+    <EmbeddedResource Include="Forms\StartupForm.resx">
+      <DependentUpon>StartupForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -91,11 +91,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="Forms\TCP_Chat_Client.resx">
-      <DependentUpon>TCP_Chat_Client.cs</DependentUpon>
+    <EmbeddedResource Include="Forms\TcpChatClientForm.resx">
+      <DependentUpon>TcpChatClientForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\TCP_Chat_Server.resx">
-      <DependentUpon>TCP_Chat_Server.cs</DependentUpon>
+    <EmbeddedResource Include="Forms\TcpChatServerForm.resx">
+      <DependentUpon>TcpChatServerForm.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
