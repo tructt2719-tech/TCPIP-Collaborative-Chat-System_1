@@ -1,6 +1,6 @@
-﻿namespace TCPIP_Collaborative_Chat_System
+namespace TCPIP_Collaborative_Chat_System
 {
-    partial class TCP_Chat_Client
+    partial class TcpChatClientForm
     {
         /// <summary>
         /// Required designer variable.
@@ -28,35 +28,35 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.ServerIP = new System.Windows.Forms.Label();
-            this.Port = new System.Windows.Forms.Label();
+            this.lblServerIP = new System.Windows.Forms.Label();
+            this.lblPort = new System.Windows.Forms.Label();
             this.numServerPort = new System.Windows.Forms.NumericUpDown();
             this.txtServerIP = new System.Windows.Forms.TextBox();
             this.btnConnect = new System.Windows.Forms.Button();
-            this.lbTrangThai = new System.Windows.Forms.Label();
-            this.txtThongDiep = new System.Windows.Forms.RichTextBox();
-            this.GửiTinNhắn = new System.Windows.Forms.Button();
-            this.txtNoiDungChat = new System.Windows.Forms.RichTextBox();
+            this.lblStatus = new System.Windows.Forms.Label();
+            this.txtMessage = new System.Windows.Forms.RichTextBox();
+            this.btnSendMessage = new System.Windows.Forms.Button();
+            this.txtChatContent = new System.Windows.Forms.RichTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.numServerPort)).BeginInit();
             this.SuspendLayout();
             // 
-            // ServerIP
+            // lblServerIP
             // 
-            this.ServerIP.AutoSize = true;
-            this.ServerIP.Location = new System.Drawing.Point(24, 19);
-            this.ServerIP.Name = "ServerIP";
-            this.ServerIP.Size = new System.Drawing.Size(62, 16);
-            this.ServerIP.TabIndex = 0;
-            this.ServerIP.Text = "Server IP";
+            this.lblServerIP.AutoSize = true;
+            this.lblServerIP.Location = new System.Drawing.Point(24, 19);
+            this.lblServerIP.Name = "lblServerIP";
+            this.lblServerIP.Size = new System.Drawing.Size(62, 16);
+            this.lblServerIP.TabIndex = 0;
+            this.lblServerIP.Text = "Server IP";
             // 
-            // Port
+            // lblPort
             // 
-            this.Port.AutoSize = true;
-            this.Port.Location = new System.Drawing.Point(336, 19);
-            this.Port.Name = "Port";
-            this.Port.Size = new System.Drawing.Size(31, 16);
-            this.Port.TabIndex = 1;
-            this.Port.Text = "Port";
+            this.lblPort.AutoSize = true;
+            this.lblPort.Location = new System.Drawing.Point(336, 19);
+            this.lblPort.Name = "lblPort";
+            this.lblPort.Size = new System.Drawing.Size(31, 16);
+            this.lblPort.TabIndex = 1;
+            this.lblPort.Text = "lblPort";
             // 
             // numServerPort
             // 
@@ -95,62 +95,62 @@
             this.btnConnect.UseVisualStyleBackColor = true;
             this.btnConnect.Click += new System.EventHandler(this.btnConnect_Click);
             // 
-            // lbTrangThai
+            // lblStatus
             // 
-            this.lbTrangThai.BackColor = System.Drawing.Color.LightYellow;
-            this.lbTrangThai.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.lbTrangThai.Location = new System.Drawing.Point(12, 62);
-            this.lbTrangThai.Name = "lbTrangThai";
-            this.lbTrangThai.Size = new System.Drawing.Size(749, 26);
-            this.lbTrangThai.TabIndex = 5;
-            this.lbTrangThai.Text = "Chưa kết nối";
-            this.lbTrangThai.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblStatus.BackColor = System.Drawing.Color.LightYellow;
+            this.lblStatus.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lblStatus.Location = new System.Drawing.Point(12, 62);
+            this.lblStatus.Name = "lblStatus";
+            this.lblStatus.Size = new System.Drawing.Size(749, 26);
+            this.lblStatus.TabIndex = 5;
+            this.lblStatus.Text = "Chưa kết nối";
+            this.lblStatus.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // txtThongDiep
+            // txtMessage
             // 
-            this.txtThongDiep.Location = new System.Drawing.Point(12, 526);
-            this.txtThongDiep.Name = "txtThongDiep";
-            this.txtThongDiep.Size = new System.Drawing.Size(599, 26);
-            this.txtThongDiep.TabIndex = 6;
-            this.txtThongDiep.Text = "";
+            this.txtMessage.Location = new System.Drawing.Point(12, 526);
+            this.txtMessage.Name = "txtMessage";
+            this.txtMessage.Size = new System.Drawing.Size(599, 26);
+            this.txtMessage.TabIndex = 6;
+            this.txtMessage.Text = "";
             // 
-            // GửiTinNhắn
+            // btnSendMessage
             // 
-            this.GửiTinNhắn.Location = new System.Drawing.Point(649, 521);
-            this.GửiTinNhắn.Name = "GửiTinNhắn";
-            this.GửiTinNhắn.Size = new System.Drawing.Size(98, 31);
-            this.GửiTinNhắn.TabIndex = 7;
-            this.GửiTinNhắn.Text = "Gửi tin nhắn";
-            this.GửiTinNhắn.UseVisualStyleBackColor = true;
-            this.GửiTinNhắn.Click += new System.EventHandler(this.GửiTinNhắn_Click);
+            this.btnSendMessage.Location = new System.Drawing.Point(649, 521);
+            this.btnSendMessage.Name = "btnSendMessage";
+            this.btnSendMessage.Size = new System.Drawing.Size(98, 31);
+            this.btnSendMessage.TabIndex = 7;
+            this.btnSendMessage.Text = "Gửi tin nhắn";
+            this.btnSendMessage.UseVisualStyleBackColor = true;
+            this.btnSendMessage.Click += new System.EventHandler(this.btnSendMessage_Click);
             // 
-            // txtNoiDungChat
+            // txtChatContent
             // 
-            this.txtNoiDungChat.Location = new System.Drawing.Point(12, 114);
-            this.txtNoiDungChat.Name = "txtNoiDungChat";
-            this.txtNoiDungChat.Size = new System.Drawing.Size(749, 386);
-            this.txtNoiDungChat.TabIndex = 8;
-            this.txtNoiDungChat.Text = "";
+            this.txtChatContent.Location = new System.Drawing.Point(12, 114);
+            this.txtChatContent.Name = "txtChatContent";
+            this.txtChatContent.Size = new System.Drawing.Size(749, 386);
+            this.txtChatContent.TabIndex = 8;
+            this.txtChatContent.Text = "";
             // 
-            // TCP_Chat_Client
+            // TcpChatClientForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
             this.ClientSize = new System.Drawing.Size(800, 574);
-            this.Controls.Add(this.txtNoiDungChat);
-            this.Controls.Add(this.GửiTinNhắn);
-            this.Controls.Add(this.txtThongDiep);
-            this.Controls.Add(this.lbTrangThai);
+            this.Controls.Add(this.txtChatContent);
+            this.Controls.Add(this.btnSendMessage);
+            this.Controls.Add(this.txtMessage);
+            this.Controls.Add(this.lblStatus);
             this.Controls.Add(this.btnConnect);
             this.Controls.Add(this.numServerPort);
             this.Controls.Add(this.txtServerIP);
-            this.Controls.Add(this.Port);
-            this.Controls.Add(this.ServerIP);
+            this.Controls.Add(this.lblPort);
+            this.Controls.Add(this.lblServerIP);
             this.ForeColor = System.Drawing.Color.Black;
-            this.Name = "TCP_Chat_Client";
+            this.Name = "TcpChatClientForm";
             this.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.Text = "TCP_Chat_Client";
+            this.Text = "TcpChatClientForm";
             this.TransparencyKey = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             ((System.ComponentModel.ISupportInitialize)(this.numServerPort)).EndInit();
             this.ResumeLayout(false);
@@ -160,14 +160,14 @@
 
         #endregion
 
-        private System.Windows.Forms.Label ServerIP;
-        private System.Windows.Forms.Label Port;
+        private System.Windows.Forms.Label lblServerIP;
+        private System.Windows.Forms.Label lblPort;
         private System.Windows.Forms.NumericUpDown numServerPort;
         private System.Windows.Forms.TextBox txtServerIP;
         private System.Windows.Forms.Button btnConnect;
-        private System.Windows.Forms.Label lbTrangThai;
-        private System.Windows.Forms.RichTextBox txtThongDiep;
-        private System.Windows.Forms.Button GửiTinNhắn;
-        private System.Windows.Forms.RichTextBox txtNoiDungChat;
+        private System.Windows.Forms.Label lblStatus;
+        private System.Windows.Forms.RichTextBox txtMessage;
+        private System.Windows.Forms.Button btnSendMessage;
+        private System.Windows.Forms.RichTextBox txtChatContent;
     }
 }

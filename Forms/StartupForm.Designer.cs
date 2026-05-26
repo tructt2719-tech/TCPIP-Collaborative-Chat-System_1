@@ -1,6 +1,6 @@
-﻿namespace TCPIP_Collaborative_Chat_System
+namespace TCPIP_Collaborative_Chat_System
 {
-    partial class Form_Startup
+    partial class StartupForm
     {
         /// <summary>
         /// Required designer variable.
@@ -28,22 +28,22 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.label1 = new System.Windows.Forms.Label();
+            this.lblChooseMode = new System.Windows.Forms.Label();
             this.radClient = new System.Windows.Forms.RadioButton();
             this.radServer = new System.Windows.Forms.RadioButton();
             this.btnOK = new System.Windows.Forms.Button();
             this.btnExit = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
-            // label1
+            // lblChooseMode
             // 
-            this.label1.AutoSize = true;
-            this.label1.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(163)));
-            this.label1.Location = new System.Drawing.Point(12, 9);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(180, 28);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "Chọn chế độ chạy";
+            this.lblChooseMode.AutoSize = true;
+            this.lblChooseMode.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(163)));
+            this.lblChooseMode.Location = new System.Drawing.Point(12, 9);
+            this.lblChooseMode.Name = "lblChooseMode";
+            this.lblChooseMode.Size = new System.Drawing.Size(180, 28);
+            this.lblChooseMode.TabIndex = 0;
+            this.lblChooseMode.Text = "Chọn chế độ chạy";
             // 
             // radClient
             // 
@@ -88,9 +88,9 @@
             this.btnExit.TabIndex = 4;
             this.btnExit.Text = "Thoát";
             this.btnExit.UseVisualStyleBackColor = true;
-            this.btnExit.Click += new System.EventHandler(this.btnExit_Click_1);
+            this.btnExit.Click += new System.EventHandler(this.btnExit_Click);
             // 
-            // Form_Startup
+            // StartupForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -99,9 +99,9 @@
             this.Controls.Add(this.btnOK);
             this.Controls.Add(this.radServer);
             this.Controls.Add(this.radClient);
-            this.Controls.Add(this.label1);
-            this.Name = "Form_Startup";
-            this.Text = "Form_Startup";
+            this.Controls.Add(this.lblChooseMode);
+            this.Name = "StartupForm";
+            this.Text = "StartupForm";
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -109,7 +109,7 @@
 
         #endregion
 
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label lblChooseMode;
         private System.Windows.Forms.RadioButton radClient;
         private System.Windows.Forms.RadioButton radServer;
         private System.Windows.Forms.Button btnOK;

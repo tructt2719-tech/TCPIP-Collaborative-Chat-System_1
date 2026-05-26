@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -10,9 +10,9 @@ using System.Windows.Forms;
 
 namespace TCPIP_Collaborative_Chat_System
 {
-    public partial class Form_Startup : Form
+    public partial class StartupForm : Form
     {
-        public Form_Startup()
+        public StartupForm()
         {
             InitializeComponent();
         }
@@ -21,23 +21,18 @@ namespace TCPIP_Collaborative_Chat_System
             // Nếu chọn Server
             if (radServer.Checked)
             {
-                TCP_Chat_Server serverForm = new TCP_Chat_Server();
+                TcpChatServerForm serverForm = new TcpChatServerForm();
                 serverForm.Show();
             }
             else
             {
                 // Nếu chọn Client
-                TCP_Chat_Client clientForm = new TCP_Chat_Client();
+                TcpChatClientForm clientForm = new TcpChatClientForm();
                 clientForm.Show();
             }
         }
 
         private void btnExit_Click(object sender, EventArgs e)
-        {
-            Application.Exit();
-        }
-
-        private void btnExit_Click_1(object sender, EventArgs e)
         {
             this.Close();
         }
