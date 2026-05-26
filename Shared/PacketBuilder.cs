@@ -15,4 +15,8 @@ namespace TCPIP_Collaborative_Chat_System.Shared
             return $"MESSAGE|{sender}|{message}\n";
         }
     }
+    // ── Giai đoạn 2.5 Server gắn sender vào message ──
+    // Ví dụ: MSG|Alice|Hello everyone
+    public static string MessageWithoutSender(string sender, string content)
+    => $"{PacketTypes.MSG}|{sender}|{content}\n}";
 }

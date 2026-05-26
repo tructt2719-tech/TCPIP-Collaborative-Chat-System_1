@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace TCPIP_Collaborative_Chat_System.Models
 {
-    internal class UserModel
+    internal  class UserModel
     {
+        public string Username { get; set; } = string.Empty;
+        public TcpClient TcpClient { get; set; } = null!;
     }
 }
