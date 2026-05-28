@@ -15,6 +15,8 @@ namespace TCPIP_Collaborative_Chat_System.Network
         public event Action<string> OnMessageReceived;
         public event Action<string> OnClientConnected;
         public event Action<string> OnClientDisconnected;
+        public event Action<string> OnUserListChanged;
+
 
         private Socket _serverSocket;
         private readonly List<ClientHandler> _clients = new List<ClientHandler>();
@@ -105,13 +107,65 @@ namespace TCPIP_Collaborative_Chat_System.Network
                 ProcessReceiveBuffer(handler, line =>
                 {
                     string[] parts = PacketParser.Parse(line);
-                    if (parts.Length >= 3 && parts[0] == PacketTypes.Message)
-                    {
-                        string display = parts[1] + ": " + parts[2];
-                        OnMessageReceived?.Invoke(display);
+                    if (parts.Length == 0) return;
 
-                        // Broadcast to all other clients
-                        Broadcast(line);
+                    string command = parts[0];
+
+                    // LOGIN|Alice
+                    if (command == PacketTypes.Login && parts.Length >= 2)
+                    {
+                        string username = parts[1].Trim();
+
+                        // Kiểm tra username rỗng
+                        if (string.IsNullOrWhiteSpace(username))
+                        {
+                            SendTo(handler, PacketBuilder.BuildLoginFail("Username không được rỗng"));
+                            return;
+                        }
+
+                        // Kiểm tra trùng username
+                        bool isDuplicate;
+                        lock (_clients)
+                            isDuplicate = _clients.Any(c => c.IsLoggedIn &&
+                                          c.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
+
+                        if (isDuplicate)
+                        {
+                            SendTo(handler, PacketBuilder.BuildLoginFail("Username đã tồn tại"));
+                            return;
+                        }
+
+                        // Đăng ký username thành công
+                        handler.Username = username;
+                        SendTo(handler, PacketBuilder.BuildLoginOk(username));
+
+                        // Thông báo cho tất cả
+                        string joinMsg = PacketBuilder.BuildSystem($"{username} đã tham gia");
+                        BroadcastToLoggedIn(joinMsg);
+
+                        // Gửi danh sách user online cho tất cả
+                        string userListPacket = PacketBuilder.BuildUserList(GetOnlineUsernames());
+                        BroadcastToLoggedIn(userListPacket);
+
+                        OnStatusChanged?.Invoke($"{username} đã đăng nhập");
+                        OnUserListChanged?.Invoke(string.Join(", ", GetOnlineUsernames()));
+                        return;
+                    }
+
+                    // MESSAGE — chỉ xử lý nếu đã login
+                    if (command == PacketTypes.Message && parts.Length >= 3)
+                    {
+                        if (!handler.IsLoggedIn)
+                        {
+                            SendTo(handler, PacketBuilder.BuildLoginFail("Bạn chưa đăng nhập"));
+                            return;
+                        }
+
+                        // Dùng username từ server, không tin username client gửi lên
+                        string safePacket = PacketBuilder.BuildMessage(handler.Username, parts[2]);
+                        string display = handler.Username + ": " + parts[2];
+                        OnMessageReceived?.Invoke(display);
+                        Broadcast(safePacket);
                     }
                 });
 
@@ -167,6 +221,38 @@ namespace TCPIP_Collaborative_Chat_System.Network
             }
         }
 
+        // method lấy danh sách username online
+        public List<string> GetOnlineUsernames()
+        {
+            lock (_clients)
+                return _clients
+                    .Where(c => c.IsLoggedIn)
+                    .Select(c => c.Username)
+                    .ToList();
+        }
+        //method broadcast chỉ cho loggedin users
+        public void BroadcastToLoggedIn(string packet)
+        {
+            if (!packet.EndsWith("\n")) packet += "\n";
+            byte[] buffer = Encoding.UTF8.GetBytes(packet);
+
+            lock (_clients)
+            {
+                foreach (var client in _clients.Where(c => c.IsLoggedIn).ToList())
+                {
+                    try { client.Send(buffer); }
+                    catch { }
+                }
+            }
+        }
+
+        // method gửi cho 1 client
+        private void SendTo(ClientHandler handler, string packet)
+        {
+            if (!packet.EndsWith("\n")) packet += "\n";
+            try { handler.Send(Encoding.UTF8.GetBytes(packet)); }
+            catch { }
+        }
         private static int IndexOfNewline(StringBuilder builder)
         {
             for (int i = 0; i < builder.Length; i++)

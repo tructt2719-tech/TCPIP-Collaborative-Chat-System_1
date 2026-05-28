@@ -110,5 +110,10 @@ namespace TCPIP_Collaborative_Chat_System
             _server.Stop();
             base.OnFormClosed(e);
         }
+
+        private void txtChatContent_TextChanged(object sender, EventArgs e)
+        {
+
+        }
     }
 }

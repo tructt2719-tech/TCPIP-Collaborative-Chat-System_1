@@ -29,8 +29,17 @@ namespace TCPIP_Collaborative_Chat_System
 
             try
             {
+                // MỚI
+                string username = txtUsername.Text.Trim();
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    btnConnect.Enabled = true;
+                    MessageBox.Show("Vui lòng nhập Username!", "Thông báo",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
                 btnConnect.Enabled = false;
-                _client.Connect(txtServerIP.Text, (int)numServerPort.Value);
+                _client.Connect(txtServerIP.Text.Trim(), (int)numServerPort.Value);
             }
             catch (Exception ex)
             {
@@ -48,6 +57,7 @@ namespace TCPIP_Collaborative_Chat_System
         {
             _client.OnStatusChanged += message => SafeInvoke(() =>
             {
+
                 UpdateStatus(message);
 
                 if (message.StartsWith("Kết nối thất bại"))
@@ -56,9 +66,7 @@ namespace TCPIP_Collaborative_Chat_System
                 }
 
                 if (message == "Kết nối thành công.")
-                {
-                    btnConnect.Enabled = false;
-                }
+    _client.Login(txtUsername.Text.Trim());
             });
             _client.OnMessageReceived += message => SafeInvoke(() => UpdateChatContent(message));
             _client.OnDisconnected += () => SafeInvoke(() =>
@@ -66,6 +74,24 @@ namespace TCPIP_Collaborative_Chat_System
                 UpdateStatus("Đã ngắt kết nối với Server.");
                 btnConnect.Enabled = true;
             });
+
+            _client.OnLoginResult += result => SafeInvoke(() =>
+            {
+                if (result.StartsWith("OK:"))
+                    UpdateChatContent("[System] Đăng nhập thành công!");
+                else
+                {
+                    MessageBox.Show("Đăng nhập thất bại: " + result.Substring(5));
+                    _client.Disconnect();
+                    btnConnect.Enabled = true;
+                }
+            });
+
+            _client.OnSystemMessage += msg => SafeInvoke(() =>
+                UpdateChatContent("--- " + msg + " ---"));
+
+            _client.OnUserListUpdated += users => SafeInvoke(() =>
+                UpdateStatus("Online: " + string.Join(", ", users)));
         }
 
         private void SafeInvoke(Action action)
@@ -106,8 +132,13 @@ namespace TCPIP_Collaborative_Chat_System
 
             try
             {
-                _client.Send("Client", txtMessage.Text);
-                txtMessage.Text = "";
+                // MỚI
+                if (!_client.IsLoggedIn)
+                {
+                    MessageBox.Show("Chưa đăng nhập xong!");
+                    return;
+                }
+                _client.Send(_client.Username, txtMessage.Text.Trim());
             }
             catch (Exception ex)
             {
@@ -119,6 +150,16 @@ namespace TCPIP_Collaborative_Chat_System
         {
             _client.Disconnect();
             base.OnFormClosed(e);
+        }
+
+        private void txtChatContent_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

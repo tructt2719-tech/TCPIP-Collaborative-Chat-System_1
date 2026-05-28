@@ -102,6 +102,7 @@ namespace TCPIP_Collaborative_Chat_System
             this.Controls.Add(this.lblChooseMode);
             this.Name = "StartupForm";
             this.Text = "StartupForm";
+            this.Load += new System.EventHandler(this.StartupForm_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 

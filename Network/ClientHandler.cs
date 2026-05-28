@@ -10,6 +10,8 @@ namespace TCPIP_Collaborative_Chat_System.Network
         public byte[] Buffer { get; } = new byte[1024];
         public StringBuilder ReceiveBuffer { get; } = new StringBuilder();
 
+        public string Username { get; set; } = null;
+        public bool IsLoggedIn => Username != null;
         public ClientHandler(Socket socket)
         {
             Socket = socket;

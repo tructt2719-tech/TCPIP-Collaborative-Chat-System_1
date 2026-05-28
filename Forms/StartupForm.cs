@@ -36,6 +36,11 @@ namespace TCPIP_Collaborative_Chat_System
         {
             this.Close();
         }
+
+        private void StartupForm_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }
    
