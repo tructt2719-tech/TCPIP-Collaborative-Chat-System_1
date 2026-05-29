@@ -43,7 +43,7 @@ namespace TCPIP_Collaborative_Chat_System
             this.lblServerPort.AutoSize = true;
             this.lblServerPort.Location = new System.Drawing.Point(12, 23);
             this.lblServerPort.Name = "lblServerPort";
-            this.lblServerPort.Size = new System.Drawing.Size(131, 16);
+            this.lblServerPort.Size = new System.Drawing.Size(145, 16);
             this.lblServerPort.TabIndex = 0;
             this.lblServerPort.Text = "Server chạy trên lblPort";
             // 
@@ -102,6 +102,7 @@ namespace TCPIP_Collaborative_Chat_System
             this.txtChatContent.Size = new System.Drawing.Size(755, 266);
             this.txtChatContent.TabIndex = 6;
             this.txtChatContent.Text = "";
+            this.txtChatContent.TextChanged += new System.EventHandler(this.txtChatContent_TextChanged);
             // 
             // txtMessage
             // 

@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -8,10 +10,15 @@ namespace TCPIP_Collaborative_Chat_System.Network
 {
     public class ChatClientManager
     {
+        public string Username { get; private set; }
+        public bool IsLoggedIn => Username != null;
         // Events để báo cho UI, class này không phụ thuộc trực tiếp vào WinForms
         public event Action<string> OnStatusChanged;
         public event Action<string> OnMessageReceived;
         public event Action OnDisconnected;
+        public event Action<string> OnLoginResult;   
+        public event Action<string> OnSystemMessage;
+        public event Action<List<string>> OnUserListUpdated;
 
         private Socket _socket;
         private readonly byte[] _buffer = new byte[1024];
@@ -186,13 +193,34 @@ namespace TCPIP_Collaborative_Chat_System.Network
                 ProcessReceiveBuffer(line =>
                 {
                     string[] parts = PacketParser.Parse(line);
+                    if (parts.Length == 0) return;
 
-                    if (parts.Length >= 3 && parts[0] == PacketTypes.Message)
+                    string command = parts[0];
+
+                    switch (command)
                     {
-                        string senderName = parts[1];
-                        string message = parts[2];
+                        case "LOGIN_OK":
+                            Username = parts[1];  // THÊM DÒNG NÀY
+                            OnLoginResult?.Invoke("OK:" + parts[1]);
+                            break;
 
-                        OnMessageReceived?.Invoke(senderName + ": " + message);
+                        case "LOGIN_FAIL":
+                            OnLoginResult?.Invoke("FAIL:" + (parts.Length > 1 ? parts[1] : ""));
+                            break;
+
+                        case "SYSTEM":
+                            OnSystemMessage?.Invoke(parts.Length > 1 ? parts[1] : "");
+                            break;
+
+                        case "USER_LIST":
+                            var users = parts.Skip(1).ToList();
+                            OnUserListUpdated?.Invoke(users);
+                            break;
+
+                        case "MESSAGE":
+                            if (parts.Length >= 3)
+                                OnMessageReceived?.Invoke(parts[1] + ": " + parts[2]);
+                            break;
                     }
                 });
 
@@ -267,6 +295,13 @@ namespace TCPIP_Collaborative_Chat_System.Network
                 handleLine(line);
             }
         }
+        public void Login(string username)
+        {
+            string packet = $"LOGIN|{username}\n";
+            byte[] buffer = Encoding.UTF8.GetBytes(packet);
+            try { _socket?.Send(buffer); }
+            catch (Exception ex) { OnStatusChanged?.Invoke("Gửi login thất bại: " + ex.Message); }
+        }
 
         private static int IndexOfNewline(StringBuilder builder)
         {
@@ -280,5 +315,6 @@ namespace TCPIP_Collaborative_Chat_System.Network
 
             return -1;
         }
+
     }
 }

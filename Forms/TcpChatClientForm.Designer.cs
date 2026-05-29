@@ -37,6 +37,8 @@ namespace TCPIP_Collaborative_Chat_System
             this.txtMessage = new System.Windows.Forms.RichTextBox();
             this.btnSendMessage = new System.Windows.Forms.Button();
             this.txtChatContent = new System.Windows.Forms.RichTextBox();
+            this.Username = new System.Windows.Forms.Label();
+            this.txtUsername = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.numServerPort)).BeginInit();
             this.SuspendLayout();
             // 
@@ -52,15 +54,15 @@ namespace TCPIP_Collaborative_Chat_System
             // lblPort
             // 
             this.lblPort.AutoSize = true;
-            this.lblPort.Location = new System.Drawing.Point(336, 19);
+            this.lblPort.Location = new System.Drawing.Point(427, 19);
             this.lblPort.Name = "lblPort";
-            this.lblPort.Size = new System.Drawing.Size(31, 16);
+            this.lblPort.Size = new System.Drawing.Size(45, 16);
             this.lblPort.TabIndex = 1;
             this.lblPort.Text = "lblPort";
             // 
             // numServerPort
             // 
-            this.numServerPort.Location = new System.Drawing.Point(397, 17);
+            this.numServerPort.Location = new System.Drawing.Point(478, 17);
             this.numServerPort.Maximum = new decimal(new int[] {
             65535,
             0,
@@ -78,7 +80,7 @@ namespace TCPIP_Collaborative_Chat_System
             // 
             // txtServerIP
             // 
-            this.txtServerIP.Location = new System.Drawing.Point(115, 16);
+            this.txtServerIP.Location = new System.Drawing.Point(92, 16);
             this.txtServerIP.Name = "txtServerIP";
             this.txtServerIP.Size = new System.Drawing.Size(100, 22);
             this.txtServerIP.TabIndex = 2;
@@ -126,11 +128,29 @@ namespace TCPIP_Collaborative_Chat_System
             // 
             // txtChatContent
             // 
-            this.txtChatContent.Location = new System.Drawing.Point(12, 114);
+            this.txtChatContent.Location = new System.Drawing.Point(12, 109);
             this.txtChatContent.Name = "txtChatContent";
             this.txtChatContent.Size = new System.Drawing.Size(749, 386);
             this.txtChatContent.TabIndex = 8;
             this.txtChatContent.Text = "";
+            this.txtChatContent.TextChanged += new System.EventHandler(this.txtChatContent_TextChanged);
+            // 
+            // Username
+            // 
+            this.Username.AutoSize = true;
+            this.Username.Location = new System.Drawing.Point(209, 19);
+            this.Username.Name = "Username";
+            this.Username.Size = new System.Drawing.Size(70, 16);
+            this.Username.TabIndex = 9;
+            this.Username.Text = "Username";
+            this.Username.Click += new System.EventHandler(this.label1_Click);
+            // 
+            // txtUsername
+            // 
+            this.txtUsername.Location = new System.Drawing.Point(285, 16);
+            this.txtUsername.Name = "txtUsername";
+            this.txtUsername.Size = new System.Drawing.Size(100, 22);
+            this.txtUsername.TabIndex = 10;
             // 
             // TcpChatClientForm
             // 
@@ -138,6 +158,8 @@ namespace TCPIP_Collaborative_Chat_System
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
             this.ClientSize = new System.Drawing.Size(800, 574);
+            this.Controls.Add(this.txtUsername);
+            this.Controls.Add(this.Username);
             this.Controls.Add(this.txtChatContent);
             this.Controls.Add(this.btnSendMessage);
             this.Controls.Add(this.txtMessage);
@@ -169,5 +191,7 @@ namespace TCPIP_Collaborative_Chat_System
         private System.Windows.Forms.RichTextBox txtMessage;
         private System.Windows.Forms.Button btnSendMessage;
         private System.Windows.Forms.RichTextBox txtChatContent;
+        private System.Windows.Forms.Label Username;
+        private System.Windows.Forms.TextBox txtUsername;
     }
 }
