@@ -12,7 +12,8 @@ namespace TCPIP_Collaborative_Chat_System.Network
 
         public string Username { get; set; } = null;
         public bool IsLoggedIn => Username != null;
-        public ClientHandler(Socket socket)
+
+               public ClientHandler(Socket socket)
         {
             Socket = socket;
         }

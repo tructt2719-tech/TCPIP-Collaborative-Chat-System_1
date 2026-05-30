@@ -122,6 +122,19 @@ namespace TCPIP_Collaborative_Chat_System.Network
                             SendTo(handler, PacketBuilder.BuildLoginFail("Username không được rỗng"));
                             return;
                         }
+                        // Độ dài (1–20 ký tự)
+                        if (username.Length < 1 || username.Length > 20)
+                        {
+                            SendTo(handler, PacketBuilder.BuildLoginFail("Username phải từ 1-20 ký tự"));
+                            return;
+                        }
+
+                        // Ký tự không hợp lệ (cấm ký tự phá packet)
+                        if (username.Contains("|") || username.Contains("\n") || username.Contains("\r"))
+                        {
+                            SendTo(handler, PacketBuilder.BuildLoginFail("Username chứa ký tự không hợp lệ"));
+                            return;
+                        }
 
                         // Kiểm tra trùng username
                         bool isDuplicate;
