@@ -23,11 +23,18 @@ namespace TCPIP_Collaborative_Chat_System.Network
 
         public void Start(int port)
         {
-            _serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            _serverSocket.Bind(new IPEndPoint(IPAddress.Any, port));
-            _serverSocket.Listen(10);
-            _serverSocket.BeginAccept(HandleConnection, null);
-            OnStatusChanged?.Invoke("Đang chờ kết nối...");
+            try
+            {
+                _serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                _serverSocket.Bind(new IPEndPoint(IPAddress.Any, port));
+                _serverSocket.Listen(10);
+                _serverSocket.BeginAccept(HandleConnection, null);
+                OnStatusChanged?.Invoke($"Server chạy ở port {port}");
+            }
+            catch (Exception ex)
+            {
+                OnStatusChanged?.Invoke("Lỗi server: " + ex.Message);
+            }
         }
 
         public void Stop()
@@ -45,6 +52,7 @@ namespace TCPIP_Collaborative_Chat_System.Network
         {
             if (!packet.EndsWith("\n")) packet += "\n";
             byte[] buffer = Encoding.UTF8.GetBytes(packet);
+            List<ClientHandler> disconnected = new List<ClientHandler>();
 
             lock (_clients)
             {
@@ -52,14 +60,20 @@ namespace TCPIP_Collaborative_Chat_System.Network
                 {
                     try
                     {
-                        client.Send(buffer);
+                        if (client.Socket.Connected)
+                        {
+                            client.Send(buffer);
+                        }
                     }
                     catch
                     {
-                        client.Close();
-                        _clients.Remove(client);
+                        disconnected.Add(client);
                     }
                 }
+            }
+            foreach (var client in disconnected)
+            {
+                RemoveClient(client);
             }
         }
 
@@ -150,7 +164,11 @@ namespace TCPIP_Collaborative_Chat_System.Network
 
                         // Đăng ký username thành công
                         handler.Username = username;
+                        handler.Status = "LoggedIn";
+                        OnMessageReceived?.Invoke($"[LIFECYCLE] {username} -> LoggedIn");
                         SendTo(handler, PacketBuilder.BuildLoginOk(username));
+                        handler.Status = "Online";
+                        OnMessageReceived?.Invoke($"[LIFECYCLE] {username} -> Online");
 
                         // Thông báo cho tất cả
                         string joinMsg = PacketBuilder.BuildSystem($"{username} đã tham gia");
@@ -173,6 +191,8 @@ namespace TCPIP_Collaborative_Chat_System.Network
                             SendTo(handler, PacketBuilder.BuildLoginFail("Bạn chưa đăng nhập"));
                             return;
                         }
+                        handler.Status = "Online";
+                        OnMessageReceived?.Invoke($"[STATUS] {handler.Username} -> {handler.Status}");
 
                         // Dùng username từ server, không tin username client gửi lên
                         string safePacket = PacketBuilder.BuildMessage(handler.Username, parts[2]);
@@ -197,14 +217,33 @@ namespace TCPIP_Collaborative_Chat_System.Network
         private void RemoveClient(ClientHandler handler)
         {
             string endpoint = "unknown";
+            string username = handler.Username;
             try { endpoint = handler.Socket.RemoteEndPoint?.ToString(); } catch { }
 
+            handler.Status = "Disconnected";
             handler.Close();
             lock (_clients)
                 _clients.Remove(handler);
 
             OnClientDisconnected?.Invoke(endpoint);
             OnStatusChanged?.Invoke($"{_clients.Count} client(s) đang kết nối");
+            // ghi nhật kí lifecycle
+            if (!string.IsNullOrEmpty(username))
+            {
+                OnMessageReceived?.Invoke($"[LIFECYCLE] {username} -> Disconnected");
+
+                // thông báo user rời đi
+                string leaveMsg = PacketBuilder.BuildSystem($"{username} đã thoát");
+
+                BroadcastToLoggedIn(leaveMsg);
+
+                // cập nhật lại danh sách online
+                string userListPacket = PacketBuilder.BuildUserList(GetOnlineUsernames());
+                BroadcastToLoggedIn(userListPacket);
+
+                // update UI server
+                OnUserListChanged?.Invoke(string.Join(", ", GetOnlineUsernames()));
+            }
         }
 
         private static void ProcessReceiveBuffer(ClientHandler handler, Action<string> handleLine)
