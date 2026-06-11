@@ -1,4 +1,5 @@
 using System;
+using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Text;
 
@@ -12,10 +13,12 @@ namespace TCPIP_Collaborative_Chat_System.Network
 
         public string Username { get; set; } = null;
         public bool IsLoggedIn => Username != null;
+        public string Status {  get; set;  }
 
                public ClientHandler(Socket socket)
         {
             Socket = socket;
+            Status = "Online";
         }
 
         public void Send(byte[] data)
