@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TCPIP_Collaborative_Chat_System.Models
 {
-    internal class MessageModel
+    public class MessageModel
     {
         public string Sender { get; set; }
         public string Content { get; set; }

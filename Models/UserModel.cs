@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TCPIP_Collaborative_Chat_System.Models
 {
-    internal class ClientSession    
+    internal class ClientSession
     {
         public string Username { get; set; }
         public string ConnectionId { get; set; }
