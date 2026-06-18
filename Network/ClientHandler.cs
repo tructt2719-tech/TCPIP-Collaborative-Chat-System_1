@@ -11,6 +11,7 @@ namespace TCPIP_Collaborative_Chat_System.Network
         public StringBuilder ReceiveBuffer { get; } = new StringBuilder();
 
         public string Username { get; set; } = null;
+        public string Status { get; set; } = "Offline";
         public bool IsLoggedIn => Username != null;
 
                public ClientHandler(Socket socket)

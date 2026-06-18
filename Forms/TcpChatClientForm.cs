@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Windows.Forms;
 using TCPIP_Collaborative_Chat_System.Network;
 
@@ -6,160 +7,265 @@ namespace TCPIP_Collaborative_Chat_System
 {
     public partial class TcpChatClientForm : Form
     {
+        private readonly ChatClientManager _client = new ChatClientManager();
+
+        private string _password = string.Empty;
+        private string _aesKey = string.Empty;
+        private bool _autoConnect;
+        private bool _autoConnectTriggered;
+        private string _replyMessage = string.Empty;
+
         public TcpChatClientForm()
         {
             InitializeComponent();
             WireClientEvents();
+            SetChatControlsEnabled(false);
         }
 
-        private readonly ChatClientManager _client = new ChatClientManager();
+        public void SetLoginInfo(
+            string username,
+            string password,
+            string serverIp,
+            int port,
+            string aesKey,
+            bool autoConnect = false)
+        {
+            txtUsername.Text = username ?? string.Empty;
+            txtServerIP.Text = serverIp ?? string.Empty;
+            numServerPort.Value = Math.Max(1, Math.Min(65535, port));
+            _password = password ?? string.Empty;
+            _aesKey = aesKey ?? string.Empty;
+            _autoConnect = autoConnect;
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+
+            if (_autoConnect && !_autoConnectTriggered)
+            {
+                _autoConnectTriggered = true;
+                ConnectInternal();
+            }
+        }
 
         private void btnConnect_Click(object sender, EventArgs e)
         {
-            if (_client.IsConnected)
-            {
-                MessageBox.Show(
-                    "Client đã kết nối rồi!",
-                    "Thông báo",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
+            ConnectInternal();
+        }
 
-                return;
-            }
-
+        private void ConnectInternal()
+        {
             try
             {
-                // MỚI
+                if (_client.IsConnected)
+                {
+                    MessageBox.Show("Đã kết nối rồi!", "Thông báo");
+                    return;
+                }
+
                 string username = txtUsername.Text.Trim();
                 if (string.IsNullOrWhiteSpace(username))
                 {
-                    btnConnect.Enabled = true;
-                    MessageBox.Show("Vui lòng nhập Username!", "Thông báo",
-                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("Nhập Username!", "Lỗi");
                     return;
                 }
-                btnConnect.Enabled = false;
-                _client.Connect(txtServerIP.Text.Trim(), (int)numServerPort.Value);
+
+                if (!IPAddress.TryParse(txtServerIP.Text.Trim(), out _))
+                {
+                    MessageBox.Show("IP Address không hợp lệ", "Lỗi");
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(_password))
+                {
+                    MessageBox.Show(
+                        "Thiếu mật khẩu. Vui lòng đăng nhập lại từ LoginForm.",
+                        "Lỗi",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    return;
+                }
+
+                SetConnectionInputsEnabled(false);
+                SetChatControlsEnabled(false);
+                lblStatus.Text = "Đang kết nối...";
+
+                _client.Connect(
+                    txtServerIP.Text.Trim(),
+                    (int)numServerPort.Value);
             }
             catch (Exception ex)
             {
-                btnConnect.Enabled = true;
-
-                MessageBox.Show(
-                    "Lỗi kết nối: " + ex.Message,
-                    "Lỗi",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                SetConnectionInputsEnabled(true);
+                lblStatus.Text = "Kết nối thất bại";
+                MessageBox.Show(ex.Message, "Lỗi kết nối");
             }
         }
 
         private void WireClientEvents()
         {
-            _client.OnStatusChanged += message => SafeInvoke(() =>
-            {
-
-                UpdateStatus(message);
-
-                if (message.StartsWith("Kết nối thất bại"))
+            _client.OnStatusChanged += msg =>
+                SafeInvoke(() =>
                 {
-                    btnConnect.Enabled = true;
-                }
+                    lblStatus.Text = msg;
 
-                if (message == "Kết nối thành công.")
-    _client.Login(txtUsername.Text.Trim());
-            });
-            _client.OnMessageReceived += message => SafeInvoke(() => UpdateChatContent(message));
-            _client.OnDisconnected += () => SafeInvoke(() =>
-            {
-                UpdateStatus("Đã ngắt kết nối với Server.");
-                btnConnect.Enabled = true;
-            });
+                    if (msg == "Kết nối thành công.")
+                    {
+                        lblStatus.Text = "Đang đăng nhập...";
+                        _client.Login(txtUsername.Text.Trim(), _password);
+                    }
+                });
 
-            _client.OnLoginResult += result => SafeInvoke(() =>
-            {
-                if (result.StartsWith("OK:"))
-                    UpdateChatContent("[System] Đăng nhập thành công!");
-                else
+            _client.OnLoginResult += result =>
+                SafeInvoke(() =>
                 {
-                    MessageBox.Show("Đăng nhập thất bại: " + result.Substring(5));
-                    _client.Disconnect();
-                    btnConnect.Enabled = true;
-                }
-            });
+                    if (result.StartsWith("OK:"))
+                    {
+                        lblStatus.Text = "Đăng nhập thành công";
+                        SetConnectionInputsEnabled(false);
+                        SetChatControlsEnabled(true);
+                    }
+                    else if (result.StartsWith("FAIL:"))
+                    {
+                        string reason = result.Length > 5
+                            ? result.Substring(5)
+                            : "Đăng nhập thất bại";
 
-            _client.OnSystemMessage += msg => SafeInvoke(() =>
-                UpdateChatContent("--- " + msg + " ---"));
+                        SetChatControlsEnabled(false);
 
-            _client.OnUserListUpdated += users => SafeInvoke(() =>
-                UpdateStatus("Online: " + string.Join(", ", users)));
+                        MessageBox.Show(
+                            reason,
+                            "Đăng nhập thất bại",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning);
+
+                        _client.Disconnect();
+
+                        btnConnect.Enabled = true;
+                        lblStatus.Text = "Disconnected";
+                        SetConnectionInputsEnabled(true);
+                    }
+                });
+
+            _client.OnMessageReceived += msg =>
+                SafeInvoke(() =>
+                {
+                    txtChatContent.AppendText(msg + Environment.NewLine);
+                });
+
+            _client.OnSystemMessage += msg =>
+                SafeInvoke(() =>
+                {
+                    txtChatContent.AppendText("[System] " + msg + Environment.NewLine);
+                });
+
+            _client.OnDisconnected += () =>
+                SafeInvoke(() =>
+                {
+                    lblStatus.Text = "Disconnected";
+                    SetConnectionInputsEnabled(true);
+                    SetChatControlsEnabled(false);
+                });
+
+            _client.OnUserListUpdated += users =>
+                SafeInvoke(() =>
+                {
+                    lstUsers.Items.Clear();
+                    foreach (var user in users)
+                        lstUsers.Items.Add(user);
+                });
         }
 
-        private void SafeInvoke(Action action)
+        private void SetConnectionInputsEnabled(bool enabled)
         {
-            if (IsDisposed) return;
-            if (InvokeRequired)
-            {
-                Invoke(action);
-            }
-            else
-            {
-                action();
-            }
+            txtServerIP.Enabled = enabled;
+            txtUsername.Enabled = enabled;
+            numServerPort.Enabled = enabled;
+            btnConnect.Enabled = enabled;
         }
 
-        private void UpdateStatus(string s)
+        private void SetChatControlsEnabled(bool enabled)
         {
-            lblStatus.Text = s;
-        }
-
-        private void UpdateChatContent(string s)
-        {
-            txtChatContent.Text += s + "\r\n";
+            txtMessage.Enabled = enabled;
+            btnSendMessage.Enabled = enabled;
+            btnEmoji.Enabled = enabled;
+            btnReply.Enabled = enabled;
+            btnForward.Enabled = enabled;
+            btnFile.Enabled = enabled;
         }
 
         private void btnSendMessage_Click(object sender, EventArgs e)
         {
-            if (!_client.IsConnected)
+            if (!_client.IsConnected || !_client.IsLoggedIn)
             {
-                MessageBox.Show("Chưa kết nối đến Server!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Chưa kết nối hoặc chưa đăng nhập.");
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(txtMessage.Text))
-            {
+            string msg = txtMessage.Text.Trim();
+            if (msg == "")
                 return;
+
+            if (_replyMessage != "")
+            {
+                msg = "[Reply] " + _replyMessage + " => " + msg;
             }
 
-            try
+            _client.Send(_client.Username, msg);
+            txtMessage.Clear();
+            _replyMessage = "";
+        }
+
+        private void btnEmoji_Click(object sender, EventArgs e)
+        {
+            ContextMenuStrip menu = new ContextMenuStrip();
+
+            string[] emojis = { "😀", "😂", "😍", "👍", "❤️", "🎉" };
+
+            foreach (string emoji in emojis)
             {
-                // MỚI
-                if (!_client.IsLoggedIn)
-                {
-                    MessageBox.Show("Chưa đăng nhập xong!");
-                    return;
-                }
-                _client.Send(_client.Username, txtMessage.Text.Trim());
+                ToolStripMenuItem item = new ToolStripMenuItem(emoji);
+                item.Click += (s, ev) => { txtMessage.Text += emoji; };
+                menu.Items.Add(item);
             }
-            catch (Exception ex)
+
+            menu.Show(btnEmoji, 0, btnEmoji.Height);
+        }
+
+        private void btnReply_Click(object sender, EventArgs e)
+        {
+            _replyMessage = "Message";
+            txtMessage.Text = "[Reply] ";
+            txtMessage.Focus();
+        }
+
+        private void btnForward_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Forward feature");
+        }
+
+        private void btnFile_Click(object sender, EventArgs e)
+        {
+            using (OpenFileDialog dlg = new OpenFileDialog())
             {
-                MessageBox.Show("Lỗi gửi tin nhắn: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (dlg.ShowDialog() == DialogResult.OK)
+                    txtMessage.Text = "[FILE] " + dlg.FileName;
             }
+        }
+
+        private void SafeInvoke(Action action)
+        {
+            if (InvokeRequired)
+                Invoke(action);
+            else
+                action();
         }
 
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
             _client.Disconnect();
             base.OnFormClosed(e);
-        }
-
-        private void txtChatContent_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label1_Click(object sender, EventArgs e)
-        {
-
         }
     }
 }
