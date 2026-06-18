@@ -17,6 +17,11 @@ namespace TCPIP_Collaborative_Chat_System.Models
             Parts = parts;
             IsValid = isValid;
         }
+        public string Get(int index)
+        {
+            if (Parts == null || index < 0 || index >= Parts.Length) return string.Empty;
+            return Parts[index].Trim();
+        }
         public static PacketModel Invalid => new PacketModel(string.Empty, new string[0], false);
         public string GetPart(int index)
         {

@@ -1,118 +1,200 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-  <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{A104F546-0E80-4528-814A-D136B1B48662}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
-    <RootNamespace>TCPIP_Collaborative_Chat_System</RootNamespace>
-    <AssemblyName>TCPIP-Collaborative-Chat-System</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <Deterministic>true</Deterministic>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Deployment" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Forms\StartupForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\StartupForm.Designer.cs">
-      <DependentUpon>StartupForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Models\MessageModel.cs" />
-    <Compile Include="Models\PacketModel.cs" />
-    <Compile Include="Models\UserModel.cs" />
-    <Compile Include="Network\ChatClientManager.cs" />
-    <Compile Include="Network\ClientHandler.cs" />
-    <Compile Include="Network\TcpChatServer.cs" />
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Forms\TcpChatClientForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\TcpChatClientForm.Designer.cs">
-      <DependentUpon>TcpChatClientForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Forms\TcpChatServerForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\TcpChatServerForm.Designer.cs">
-      <DependentUpon>TcpChatServerForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Services\MessageService.cs" />
-    <Compile Include="Services\UIService.cs" />
-    <Compile Include="Shared\EncodingHelper.cs" />
-    <Compile Include="Shared\PacketBuilder.cs" />
-    <Compile Include="Shared\PacketParser.cs" />
-    <Compile Include="Shared\PacketTypes.cs" />
-    <Compile Include="Utils\UIHelper.cs" />
-    <EmbeddedResource Include="Forms\StartupForm.resx">
-      <DependentUpon>StartupForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <EmbeddedResource Include="Forms\TcpChatClientForm.resx">
-      <DependentUpon>TcpChatClientForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Forms\TcpChatServerForm.resx">
-      <DependentUpon>TcpChatServerForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-    </Compile>
-    <None Include="README.md" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include=".gitignore" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+
+	<Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props"
+			Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+
+	<PropertyGroup>
+		<Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+		<Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+
+		<ProjectGuid>{A104F546-0E80-4528-814A-D136B1B48662}</ProjectGuid>
+
+		<OutputType>WinExe</OutputType>
+
+		<RootNamespace>TCPIP_Collaborative_Chat_System</RootNamespace>
+
+		<AssemblyName>TCPIP-Collaborative-Chat-System</AssemblyName>
+
+		<TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+
+		<FileAlignment>512</FileAlignment>
+
+		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+
+		<Deterministic>true</Deterministic>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<PlatformTarget>AnyCPU</PlatformTarget>
+		<DebugSymbols>true</DebugSymbols>
+		<DebugType>full</DebugType>
+		<Optimize>false</Optimize>
+		<OutputPath>bin\Debug\</OutputPath>
+		<DefineConstants>DEBUG;TRACE</DefineConstants>
+		<ErrorReport>prompt</ErrorReport>
+		<WarningLevel>4</WarningLevel>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+		<PlatformTarget>AnyCPU</PlatformTarget>
+		<DebugType>pdbonly</DebugType>
+		<Optimize>true</Optimize>
+		<OutputPath>bin\Release\</OutputPath>
+		<DefineConstants>TRACE</DefineConstants>
+		<ErrorReport>prompt</ErrorReport>
+		<WarningLevel>4</WarningLevel>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Reference Include="System" />
+		<Reference Include="System.Core" />
+		<Reference Include="System.Xml.Linq" />
+		<Reference Include="System.Data.DataSetExtensions" />
+		<Reference Include="Microsoft.CSharp" />
+		<Reference Include="System.Data" />
+		<Reference Include="System.Deployment" />
+		<Reference Include="System.Drawing" />
+		<Reference Include="System.Net.Http" />
+		<Reference Include="System.Windows.Forms" />
+		<Reference Include="System.Xml" />
+	</ItemGroup>
+
+	<ItemGroup>
+
+		<!-- Startup -->
+		<Compile Include="Forms\StartupForm.cs">
+			<SubType>Form</SubType>
+		</Compile>
+
+		<Compile Include="Forms\StartupForm.Designer.cs">
+			<DependentUpon>StartupForm.cs</DependentUpon>
+		</Compile>
+
+		<!-- Login -->
+		<Compile Include="Forms\LoginForm.cs">
+			<SubType>Form</SubType>
+		</Compile>
+
+		<Compile Include="Forms\LoginForm.Designer.cs">
+			<DependentUpon>LoginForm.cs</DependentUpon>
+		</Compile>
+
+		<!-- Register -->
+		<Compile Include="Forms\RegisterForm.cs">
+			<SubType>Form</SubType>
+		</Compile>
+
+		<Compile Include="Forms\RegisterForm.Designer.cs">
+			<DependentUpon>RegisterForm.cs</DependentUpon>
+		</Compile>
+
+		<!-- Client -->
+		<Compile Include="Forms\TcpChatClientForm.cs">
+			<SubType>Form</SubType>
+		</Compile>
+
+		<Compile Include="Forms\TcpChatClientForm.Designer.cs">
+			<DependentUpon>TcpChatClientForm.cs</DependentUpon>
+		</Compile>
+
+		<!-- Server -->
+		<Compile Include="Forms\TcpChatServerForm.cs">
+			<SubType>Form</SubType>
+		</Compile>
+
+		<Compile Include="Forms\TcpChatServerForm.Designer.cs">
+			<DependentUpon>TcpChatServerForm.cs</DependentUpon>
+		</Compile>
+
+		<!-- Models -->
+		<Compile Include="Models\MessageModel.cs" />
+		<Compile Include="Models\PacketModel.cs" />
+		<Compile Include="Models\UserModel.cs" />
+
+		<!-- Network -->
+		<Compile Include="Network\ChatClientManager.cs" />
+		<Compile Include="Network\ClientHandler.cs" />
+		<Compile Include="Network\TcpChatServer.cs" />
+		<Compile Include="Network\UserStore.cs" />
+
+		<!-- Services -->
+		<Compile Include="Services\MessageService.cs" />
+		<Compile Include="Services\UIService.cs" />
+
+		<!-- Shared -->
+		<Compile Include="Shared\EncodingHelper.cs" />
+		<Compile Include="Shared\PacketBuilder.cs" />
+		<Compile Include="Shared\PacketParser.cs" />
+		<Compile Include="Shared\PacketTypes.cs" />
+
+		<!-- Utils -->
+		<Compile Include="Utils\UIHelper.cs" />
+
+		<!-- Program -->
+		<Compile Include="Program.cs" />
+
+		<!-- Properties -->
+		<Compile Include="Properties\AssemblyInfo.cs" />
+
+		<Compile Include="Properties\Resources.Designer.cs">
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Resources.resx</DependentUpon>
+		</Compile>
+
+		<Compile Include="Properties\Settings.Designer.cs">
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Settings.settings</DependentUpon>
+			<DesignTimeSharedInput>True</DesignTimeSharedInput>
+		</Compile>
+
+		<!-- RESX -->
+
+		<EmbeddedResource Include="Forms\StartupForm.resx">
+			<DependentUpon>StartupForm.cs</DependentUpon>
+		</EmbeddedResource>
+
+		<EmbeddedResource Include="Forms\LoginForm.resx">
+			<DependentUpon>LoginForm.cs</DependentUpon>
+		</EmbeddedResource>
+
+		<EmbeddedResource Include="Forms\RegisterForm.resx">
+			<DependentUpon>RegisterForm.cs</DependentUpon>
+		</EmbeddedResource>
+
+		<EmbeddedResource Include="Forms\TcpChatClientForm.resx">
+			<DependentUpon>TcpChatClientForm.cs</DependentUpon>
+		</EmbeddedResource>
+
+		<EmbeddedResource Include="Forms\TcpChatServerForm.resx">
+			<DependentUpon>TcpChatServerForm.cs</DependentUpon>
+		</EmbeddedResource>
+
+		<EmbeddedResource Include="Properties\Resources.resx">
+			<Generator>ResXFileCodeGenerator</Generator>
+			<LastGenOutput>Resources.Designer.cs</LastGenOutput>
+			<SubType>Designer</SubType>
+		</EmbeddedResource>
+
+		<!-- Settings -->
+
+		<None Include="Properties\Settings.settings">
+			<Generator>SettingsSingleFileGenerator</Generator>
+			<LastGenOutput>Settings.Designer.cs</LastGenOutput>
+		</None>
+
+		<None Include="README.md" />
+
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="App.config" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include=".gitignore" />
+	</ItemGroup>
+
+	<Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+
 </Project>

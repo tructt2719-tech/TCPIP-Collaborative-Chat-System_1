@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace TCPIP_Collaborative_Chat_System.Models
 {
-    internal class ClientSession
+    public class ClientSession
     {
         public string Username { get; set; }
-        public string ConnectionId { get; set; }
-        public TcpClient Client { get; set; }
+        public string ConnectionId { get; private set; }
+        public TcpClient TcpClient { get; set; }
         public NetworkStream Stream { get; set; }
         public bool IsLoggedIn { get; set; } = false;
         public string CurrentRoom { get; set; }
@@ -19,17 +19,16 @@ namespace TCPIP_Collaborative_Chat_System.Models
         public Socket Socket { get; set; }
         public ClientSession(TcpClient client)
         {
-            Client = client ?? throw new ArgumentNullException(nameof(client));
+            if (client == null) throw new ArgumentNullException("client");
+            TcpClient = client;
             Stream = client.GetStream();
             ConnectionId = "CONN-" + Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper();
-            IsLoggedIn = false;
-            Username = null;
-            CurrentRoom = null;
             ConnectedAt = DateTime.Now;
         }
         public override string ToString()
         {
             return IsLoggedIn ? $"[Session: {Username} ({ConnectionId})]" : $"[Session: {ConnectionId}]";
+            
         }
     }
 }
