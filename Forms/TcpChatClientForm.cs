@@ -267,8 +267,7 @@ namespace TCPIP_Collaborative_Chat_System
             _client.Disconnect();
             base.OnFormClosed(e);
         }
-<<<<<<< Updated upstream
-=======
+
 
         private void txtChatContent_TextChanged(object sender, EventArgs e)
         {
@@ -290,6 +289,5 @@ namespace TCPIP_Collaborative_Chat_System
         }
 
 
->>>>>>> Stashed changes
     }
 }

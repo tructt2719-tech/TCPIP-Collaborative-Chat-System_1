@@ -4,7 +4,7 @@ namespace TCPIP_Collaborative_Chat_System.Shared
 {
     public static class PacketBuilder
     {
-<<<<<<< Updated upstream
+
         public static string BuildMessage(string sender, string message)
             => $"MESSAGE|{sender}|{message}\n";
 
@@ -18,7 +18,7 @@ namespace TCPIP_Collaborative_Chat_System.Shared
             string avatarBase64)
             => $"REGISTER|{username}|{password}|{email}|{avatarBase64}\n";
 
-=======
+
         private static string Build(params string[] parts)
         {
             return string.Join(PacketTypes.Sep, parts) + "\n";
@@ -30,7 +30,7 @@ namespace TCPIP_Collaborative_Chat_System.Shared
         {
             return $"MESSAGE|{sender}|{message}\n";
         }
->>>>>>> Stashed changes
+
         public static string BuildLoginOk(string username)
             => $"LOGIN_OK|{username}\n";
 

@@ -21,13 +21,12 @@ namespace TCPIP_Collaborative_Chat_System.Network
         public event Action<string> OnSystemMessage;
         public event Action<List<string>> OnUserListUpdated;
 
-<<<<<<< Updated upstream
         private Socket _socket;
         private readonly byte[] _buffer = new byte[8192];
-=======
+
         public Socket _socket;
         private readonly byte[] _buffer = new byte[1024];
->>>>>>> Stashed changes
+
         private readonly StringBuilder _receiveBuffer = new StringBuilder();
 
         private bool _isConnecting;
@@ -263,9 +262,9 @@ namespace TCPIP_Collaborative_Chat_System.Network
             }
         }
 
-<<<<<<< Updated upstream
-        public void Login(string username, string password)
-=======
+
+        public void Login(string username, string password);
+
         public void SendReply(string senderName, string message, string replyToId, string replyToSender)
         {
             Socket socket = _socket;
@@ -338,7 +337,7 @@ namespace TCPIP_Collaborative_Chat_System.Network
         }
 
         public void Disconnect()
->>>>>>> Stashed changes
+
         {
             Socket socket = _socket;
 
