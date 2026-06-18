@@ -1,119 +1,117 @@
-namespace TCPIP_Collaborative_Chat_System
+using System.Windows.Forms;
+using System.ComponentModel;
+
+namespace TCPIP_Collaborative_Chat_System.Forms
 {
     partial class StartupForm
     {
-        /// <summary>
-        /// Required designer variable.
-        /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+
+        private System.Windows.Forms.Label lblTitle;
+        private System.Windows.Forms.Label lblSubTitle;
+        private System.Windows.Forms.Button btnServer;
+        private System.Windows.Forms.Button btnClient;
+        private System.Windows.Forms.Button btnExit;
+
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
-            {
-                components.Dispose();
-            }
+            if (disposing && (components != null)) components.Dispose();
             base.Dispose(disposing);
         }
 
-        #region Windows Form Designer generated code
-
-        /// <summary>
-        /// Required method for Designer support - do not modify
-        /// the contents of this method with the code editor.
-        /// </summary>
         private void InitializeComponent()
         {
-            this.lblChooseMode = new System.Windows.Forms.Label();
-            this.radClient = new System.Windows.Forms.RadioButton();
-            this.radServer = new System.Windows.Forms.RadioButton();
-            this.btnOK = new System.Windows.Forms.Button();
+            this.lblTitle = new System.Windows.Forms.Label();
+            this.lblSubTitle = new System.Windows.Forms.Label();
+            this.btnServer = new System.Windows.Forms.Button();
+            this.btnClient = new System.Windows.Forms.Button();
             this.btnExit = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
-            // lblChooseMode
+            // lblTitle
             // 
-            this.lblChooseMode.AutoSize = true;
-            this.lblChooseMode.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(163)));
-            this.lblChooseMode.Location = new System.Drawing.Point(12, 9);
-            this.lblChooseMode.Name = "lblChooseMode";
-            this.lblChooseMode.Size = new System.Drawing.Size(180, 28);
-            this.lblChooseMode.TabIndex = 0;
-            this.lblChooseMode.Text = "Chọn chế độ chạy";
+            this.lblTitle.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
+            this.lblTitle.Location = new System.Drawing.Point(0, 130);
+            this.lblTitle.Name = "lblTitle";
+            this.lblTitle.Size = new System.Drawing.Size(300, 50);
+            this.lblTitle.TabIndex = 0;
+            this.lblTitle.Text = "TCP/IP";
             // 
-            // radClient
+            // lblSubTitle
             // 
-            this.radClient.AutoSize = true;
-            this.radClient.Font = new System.Drawing.Font("Segoe UI", 10.2F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Italic))), System.Drawing.GraphicsUnit.Point, ((byte)(163)));
-            this.radClient.Location = new System.Drawing.Point(224, 59);
-            this.radClient.Name = "radClient";
-            this.radClient.Size = new System.Drawing.Size(194, 27);
-            this.radClient.TabIndex = 1;
-            this.radClient.TabStop = true;
-            this.radClient.Text = "Chạy ở chế độ Client";
-            this.radClient.UseVisualStyleBackColor = true;
+            this.lblSubTitle.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.lblSubTitle.ForeColor = System.Drawing.Color.White;
+            this.lblSubTitle.Location = new System.Drawing.Point(2, 85);
+            this.lblSubTitle.Name = "lblSubTitle";
+            this.lblSubTitle.Size = new System.Drawing.Size(100, 23);
+            this.lblSubTitle.TabIndex = 1;
+            this.lblSubTitle.Text = "COLLABORATIVE\r\nCHAT SYSTEM";
+            this.lblSubTitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // radServer
+            // btnServer
             // 
-            this.radServer.AutoSize = true;
-            this.radServer.Font = new System.Drawing.Font("Segoe UI", 10.2F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Italic))), System.Drawing.GraphicsUnit.Point, ((byte)(163)));
-            this.radServer.Location = new System.Drawing.Point(224, 111);
-            this.radServer.Name = "radServer";
-            this.radServer.Size = new System.Drawing.Size(198, 27);
-            this.radServer.TabIndex = 2;
-            this.radServer.TabStop = true;
-            this.radServer.Text = "Chạy ở chế độ Server";
-            this.radServer.UseVisualStyleBackColor = true;
+            this.btnServer.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(152)))), ((int)(((byte)(219)))));
+            this.btnServer.FlatAppearance.BorderSize = 0;
+            this.btnServer.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnServer.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.btnServer.ForeColor = System.Drawing.Color.White;
+            this.btnServer.Location = new System.Drawing.Point(50, 200);
+            this.btnServer.Name = "btnServer";
+            this.btnServer.Size = new System.Drawing.Size(200, 35);
+            this.btnServer.TabIndex = 2;
+            this.btnServer.Text = "START SERVER";
+            this.btnServer.UseVisualStyleBackColor = false;
+            this.btnServer.Click += new System.EventHandler(this.btnServer_Click);
             // 
-            // btnOK
+            // btnClient
             // 
-            this.btnOK.Location = new System.Drawing.Point(203, 196);
-            this.btnOK.Name = "btnOK";
-            this.btnOK.Size = new System.Drawing.Size(75, 52);
-            this.btnOK.TabIndex = 3;
-            this.btnOK.Text = "OK";
-            this.btnOK.UseVisualStyleBackColor = true;
-            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
+            this.btnClient.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(174)))), ((int)(((byte)(96)))));
+            this.btnClient.FlatAppearance.BorderSize = 0;
+            this.btnClient.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnClient.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.btnClient.ForeColor = System.Drawing.Color.White;
+            this.btnClient.Location = new System.Drawing.Point(50, 245);
+            this.btnClient.Name = "btnClient";
+            this.btnClient.Size = new System.Drawing.Size(200, 35);
+            this.btnClient.TabIndex = 3;
+            this.btnClient.Text = "JOIN CHAT";
+            this.btnClient.UseVisualStyleBackColor = false;
+            this.btnClient.Click += new System.EventHandler(this.btnClient_Click);
             // 
             // btnExit
             // 
-            this.btnExit.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
-            this.btnExit.Location = new System.Drawing.Point(357, 196);
+            this.btnExit.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(73)))), ((int)(((byte)(94)))));
+            this.btnExit.FlatAppearance.BorderSize = 0;
+            this.btnExit.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnExit.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.btnExit.ForeColor = System.Drawing.Color.White;
+            this.btnExit.Location = new System.Drawing.Point(50, 290);
             this.btnExit.Name = "btnExit";
-            this.btnExit.Size = new System.Drawing.Size(84, 52);
+            this.btnExit.Size = new System.Drawing.Size(200, 35);
             this.btnExit.TabIndex = 4;
-            this.btnExit.Text = "Thoát";
-            this.btnExit.UseVisualStyleBackColor = true;
+            this.btnExit.Text = "EXIT";
+            this.btnExit.UseVisualStyleBackColor = false;
             this.btnExit.Click += new System.EventHandler(this.btnExit_Click);
             // 
             // StartupForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(14)))), ((int)(((byte)(32)))), ((int)(((byte)(63)))));
+            this.ClientSize = new System.Drawing.Size(469, 423);
+            this.Controls.Add(this.lblTitle);
+            this.Controls.Add(this.lblSubTitle);
+            this.Controls.Add(this.btnServer);
+            this.Controls.Add(this.btnClient);
             this.Controls.Add(this.btnExit);
-            this.Controls.Add(this.btnOK);
-            this.Controls.Add(this.radServer);
-            this.Controls.Add(this.radClient);
-            this.Controls.Add(this.lblChooseMode);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.MaximizeBox = false;
             this.Name = "StartupForm";
-            this.Text = "StartupForm";
-            this.Load += new System.EventHandler(this.StartupForm_Load);
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.Text = "Startup";
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
-
-        #endregion
-
-        private System.Windows.Forms.Label lblChooseMode;
-        private System.Windows.Forms.RadioButton radClient;
-        private System.Windows.Forms.RadioButton radServer;
-        private System.Windows.Forms.Button btnOK;
-        private System.Windows.Forms.Button btnExit;
     }
 }

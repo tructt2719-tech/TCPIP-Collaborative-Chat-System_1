@@ -7,113 +7,153 @@ namespace TCPIP_Collaborative_Chat_System
 {
     public partial class TcpChatServerForm : Form
     {
+        private readonly TcpChatServer _server =
+            new TcpChatServer();
+
+        private int _clientCount = 0;
+        private int _messageCount = 0;
+
         public TcpChatServerForm()
         {
             InitializeComponent();
             WireServerEvents();
         }
-        private readonly TcpChatServer _server = new TcpChatServer();
-        private int _clientCount;
 
-        private void btnInitServer_Click(object sender, EventArgs e)
+        private void btnInitServer_Click(
+            object sender,
+            EventArgs e)
         {
             try
             {
-                _server.Start((int)numServerPort.Value);
+                _server.Start(
+                    (int)numServerPort.Value);
+
+                btnInitServer.Enabled = false;
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Lỗi khởi tạo Server: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(
+                    ex.Message,
+                    "Server Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
+
         private void WireServerEvents()
         {
-            _server.OnStatusChanged += status => SafeInvoke(() => UpdateStatus(status));
-            _server.OnMessageReceived += message => SafeInvoke(() => UpdateChatContent(message));
-            _server.OnClientConnected += endpoint =>
+            _server.OnStatusChanged +=
+                status =>
+                SafeInvoke(() =>
+                {
+                    lblStatus.Text = status;
+                });
+
+            _server.OnMessageReceived +=
+                message =>
+                SafeInvoke(() =>
+                {
+                    txtChatContent.AppendText(
+                        message +
+                        Environment.NewLine);
+
+                    _messageCount++;
+
+                    lblTotalMessages.Text =
+                        _messageCount.ToString();
+                });
+
+            _server.OnClientConnected +=
+                endpoint =>
                 SafeInvoke(() =>
                 {
                     _clientCount++;
-                    UpdateStatus($"Client connected: {endpoint}");
+
+                    lblClientCount.Text =
+                        _clientCount.ToString();
                 });
-            _server.OnClientDisconnected += endpoint =>
+
+            _server.OnClientDisconnected +=
+                endpoint =>
                 SafeInvoke(() =>
                 {
-                    _clientCount = Math.Max(0, _clientCount - 1);
-                    UpdateStatus($"Client disconnected: {endpoint}");
+                    _clientCount--;
+
+                    if (_clientCount < 0)
+                        _clientCount = 0;
+
+                    lblClientCount.Text =
+                        _clientCount.ToString();
                 });
+
+            _server.OnUserListChanged +=
+                users =>
+                SafeInvoke(() =>
+                {
+                    lstUsers.Items.Clear();
+
+                    foreach (string user
+                        in users.Split(','))
+                    {
+                        if (!string.IsNullOrWhiteSpace(user))
+                        {
+                            lstUsers.Items.Add(
+                                user.Trim());
+                        }
+                    }
+                });
+        }
+
+        private void btnSendMessage_Click(
+            object sender,
+            EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(
+                txtMessage.Text))
+                return;
+
+            try
+            {
+                string packet =
+                    PacketBuilder.BuildMessage(
+                        "Server",
+                        txtMessage.Text);
+
+                _server.Broadcast(packet);
+
+                txtChatContent.AppendText(
+                    "Server: " +
+                    txtMessage.Text +
+                    Environment.NewLine);
+
+                txtMessage.Clear();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    ex.Message,
+                    "Broadcast Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
 
         private void SafeInvoke(Action action)
         {
-            if (IsDisposed || !IsHandleCreated) return;
-            try
-            {
-                if (InvokeRequired)
-                {
-                    Invoke(action);
-                }
-                else
-                {
-                    action();
-                }
-            }
-            catch (ObjectDisposedException)
-            {
-                // Ignore callbacks after the form is closed.
-            }
-            catch (InvalidOperationException)
-            {
-                // Ignore callbacks when handle is no longer valid.
-            }
-        }
-
-        private void UpdateStatus(string s)
-        {
-            lblStatus.Text = s;
-        }
-
-        private void btnSendMessage_Click(object sender, EventArgs e)
-        {
-            if (_clientCount == 0)
-            {
-                MessageBox.Show("Chưa có Client nào kết nối!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            if (IsDisposed)
                 return;
-            }
 
-            if (string.IsNullOrWhiteSpace(txtMessage.Text))
-            {
-                return;
-            }
-
-            try
-            {
-                string packet = PacketBuilder.BuildMessage("Server", txtMessage.Text);
-                _server.Broadcast(packet);
-                UpdateChatContent("Server: " + txtMessage.Text);
-                txtMessage.Text = "";
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi gửi tin nhắn: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            if (InvokeRequired)
+                Invoke(action);
+            else
+                action();
         }
 
-
-        private void UpdateChatContent(string s)
-        {
-            txtChatContent.Text += s + "\r\n";
-        }
-
-        protected override void OnFormClosed(FormClosedEventArgs e)
+        protected override void OnFormClosed(
+            FormClosedEventArgs e)
         {
             _server.Stop();
             base.OnFormClosed(e);
-        }
-
-        private void txtChatContent_TextChanged(object sender, EventArgs e)
-        {
-
         }
     }
 }
