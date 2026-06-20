@@ -24,12 +24,7 @@ namespace TCPIP_Collaborative_Chat_System.Shared
             return string.Join(PacketTypes.Sep, parts) + "\n";
         }
 
-        public static string BuildMessage(
-            string sender,
-            string message)
-        {
-            return $"MESSAGE|{sender}|{message}\n";
-        }
+        
 
         public static string BuildLoginOk(string username)
             => $"LOGIN_OK|{username}\n";

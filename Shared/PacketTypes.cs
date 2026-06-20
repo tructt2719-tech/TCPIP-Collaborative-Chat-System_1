@@ -1,12 +1,9 @@
-<<<<<<< HEAD
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-=======
->>>>>>> 686bff1d416d9ca18bce87fa5bf3f3ce65246c66
 namespace TCPIP_Collaborative_Chat_System.Shared
 {
     public static class PacketTypes
@@ -23,19 +20,11 @@ namespace TCPIP_Collaborative_Chat_System.Shared
         public const string Message = "MESSAGE";
         public const string RoomMessage = "ROOM_MESSAGE";
         public const string Disconnect = "DISCONNECT";
-<<<<<<< HEAD
         public const string System = "SYSTEM";      // thông báo user join/leave
         public const string UserList = "USER_LIST";   // danh sách online
         public const string UserJoined = "USER_JOINED"; // thông báo user mới join
         public const string UserLeft = "USER_LEFT";   // thông báo user rời
-<<<<<<< Updated upstream
         public const char Delimiter = '|';
-        public const string NewLine = "\n";
-=======
-        public const string System = "SYSTEM";
-        public const string UserList = "USER_LIST";
->>>>>>> 686bff1d416d9ca18bce87fa5bf3f3ce65246c66
-=======
         public const string CreateRoom = "CREATE_ROOM";
         public const string CreateRoomOk = "CREATE_ROOM_OK";
         public const string JoinRoom = "JOIN_ROOM";
@@ -53,6 +42,5 @@ namespace TCPIP_Collaborative_Chat_System.Shared
         public const string FowardMessage = "FORWARD_MESSAGE"; // chuyển tiếp tin nhắn
         public const string RoomFowardMessage = "ROOM_FORWARD_MESSAGE"; // chuyển tiếp tin nhắn trong room
         public const string Error = "ERROR";
->>>>>>> Stashed changes
     }
 }

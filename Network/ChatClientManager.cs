@@ -21,11 +21,9 @@ namespace TCPIP_Collaborative_Chat_System.Network
         public event Action<string> OnSystemMessage;
         public event Action<List<string>> OnUserListUpdated;
 
-        private Socket _socket;
-        private readonly byte[] _buffer = new byte[8192];
-
         public Socket _socket;
-        private readonly byte[] _buffer = new byte[1024];
+        private readonly byte[] _buffer = new byte[8192];
+        
 
         private readonly StringBuilder _receiveBuffer = new StringBuilder();
 
@@ -263,7 +261,33 @@ namespace TCPIP_Collaborative_Chat_System.Network
         }
 
 
-        public void Login(string username, string password);
+        public void Login(string username, string password)
+            {
+                Socket socket = _socket;
+
+                if (socket == null || !socket.Connected)
+                {
+                    OnStatusChanged?.Invoke("Chưa kết nối đến Server.");
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    OnStatusChanged?.Invoke("Username không hợp lệ.");
+                    return;
+                }
+                try
+                {
+                    string packet = PacketBuilder.BuildLogin(username, password);
+                    byte[] buffer = Encoding.UTF8.GetBytes(packet);
+                    socket.Send(buffer);
+                }
+                catch (Exception ex)
+                {
+                    OnStatusChanged?.Invoke("Gửi LOGIN thất bại: " + ex.Message);
+                    HandleDisconnected(socket);
+                }
+            }
 
         public void SendReply(string senderName, string message, string replyToId, string replyToSender)
         {
@@ -337,29 +361,6 @@ namespace TCPIP_Collaborative_Chat_System.Network
         }
 
         public void Disconnect()
-
-        {
-            Socket socket = _socket;
-
-            if (socket == null || !socket.Connected)
-            {
-                OnStatusChanged?.Invoke("Chưa kết nối đến Server.");
-                return;
-            }
-
-            try
-            {
-                string packet = PacketBuilder.BuildLogin(username, password);
-                byte[] buffer = Encoding.UTF8.GetBytes(packet);
-                socket.Send(buffer);
-            }
-            catch (Exception ex)
-            {
-                OnStatusChanged?.Invoke("Gửi login thất bại: " + ex.Message);
-            }
-        }
-
-        public void Disconnect()
         {
             Socket socket = _socket;
 
@@ -374,6 +375,7 @@ namespace TCPIP_Collaborative_Chat_System.Network
 
             HandleDisconnected(socket);
         }
+
 
         private void HandleConnection(IAsyncResult ar)
         {
