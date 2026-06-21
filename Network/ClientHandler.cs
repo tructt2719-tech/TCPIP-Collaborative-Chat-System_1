@@ -14,6 +14,8 @@ namespace TCPIP_Collaborative_Chat_System.Network
         public string Username { get; set; } = null;
         public string Status { get; set; } = "Offline";
         public bool IsLoggedIn => Username != null;
+        public string AvatarBase64 { get; set; } = string.Empty;
+        public string CurrentRoom { get; set; } = null;
 
                public ClientHandler(Socket socket)
         {
