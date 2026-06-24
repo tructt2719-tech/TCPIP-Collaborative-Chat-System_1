@@ -1,11 +1,14 @@
 using System;
 using System.Windows.Forms;
+using TCPIP_Collaborative_Chat_System.Forms;
 using TCPIP_Collaborative_Chat_System.Network;
+using TCPIP_Collaborative_Chat_System.Models;
 
 namespace TCPIP_Collaborative_Chat_System
 {
     public partial class TcpChatClientForm : Form
     {
+        private string _currentRoom = "";
         public TcpChatClientForm()
         {
             InitializeComponent();
@@ -66,7 +69,7 @@ namespace TCPIP_Collaborative_Chat_System
                 }
 
                 if (message == "Kết nối thành công.")
-    _client.Login(txtUsername.Text.Trim());
+            _client.Login(txtUsername.Text.Trim());
             });
             _client.OnMessageReceived += message => SafeInvoke(() => UpdateChatContent(message));
             _client.OnDisconnected += () => SafeInvoke(() =>
@@ -92,6 +95,47 @@ namespace TCPIP_Collaborative_Chat_System
 
             _client.OnUserListUpdated += users => SafeInvoke(() =>
                 UpdateStatus("Online: " + string.Join(", ", users)));
+
+            _client.OnRoomMessage += msg =>
+                SafeInvoke(() =>
+                UpdateChatContent(msg));
+
+            _client.OnRoomUserJoined += msg =>
+                SafeInvoke(() =>
+                UpdateChatContent("[ROOM] " + msg));
+
+            _client.OnRoomUserLeft += msg =>
+                SafeInvoke(() =>
+                UpdateChatContent("[ROOM] " + msg));
+
+            _client.OnRoomListReceived += rooms =>
+            {
+                SafeInvoke(() =>
+                {
+                    lstRooms.Items.Clear();
+
+                    foreach (var roomInfo in rooms)
+                    {
+                        string[] data =
+                            roomInfo.Split(',');
+
+                        string roomName =
+                            data[0];
+
+                        bool isPrivate =
+                            data.Length > 1 &&
+                            data[1] == "PRIVATE";
+
+                        lstRooms.Items.Add(
+                            new RoomItem
+                            {
+                                Name = roomName,
+                                IsPrivate = isPrivate
+                            });
+                    }
+                });
+            };
+
         }
 
         private void SafeInvoke(Action action)
@@ -132,13 +176,19 @@ namespace TCPIP_Collaborative_Chat_System
 
             try
             {
-                // MỚI
                 if (!_client.IsLoggedIn)
                 {
                     MessageBox.Show("Chưa đăng nhập xong!");
                     return;
                 }
-                _client.Send(_client.Username, txtMessage.Text.Trim());
+
+                if (string.IsNullOrWhiteSpace(_currentRoom))
+                {
+                    MessageBox.Show("Bạn chưa tham gia phòng nào");
+                    return;
+                }
+                _client.SendRoomMessage(_currentRoom, txtMessage.Text.Trim());
+                txtMessage.Clear();
             }
             catch (Exception ex)
             {
@@ -160,6 +210,73 @@ namespace TCPIP_Collaborative_Chat_System
         private void label1_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void textBox1_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnCreateRoom_Click(object sender, EventArgs e)
+        {
+            CreateRoomForm frm = new CreateRoomForm();
+            if (frm.ShowDialog() == DialogResult.OK)
+            {
+                _client.CreateRoom(frm.RoomName, frm.MaxUsers, frm.IsPrivate, frm.Password);
+            }
+        }
+
+        private void btnJoinRoom_Click(object sender, EventArgs e)
+        {
+            if (lstRooms.SelectedItem == null)
+            {
+                MessageBox.Show("Chọn phòng trước");
+                return;
+            }
+            RoomItem room = (RoomItem)lstRooms.SelectedItem;
+            string roomName = room.Name;
+            string password = "";
+
+            if (room.IsPrivate)
+            {
+                password = txtRoomName.Text.Trim();
+
+                if (string.IsNullOrWhiteSpace(password))
+                {
+                    MessageBox.Show("Vui lòng nhập mật khẩu");
+                    return;
+                }
+            }
+
+            _client.JoinRoom(roomName, password);
+            _currentRoom = room.Name;
+        }
+
+        private void btnLeaveRoom_Click(object sender, EventArgs e)
+        {
+            if (lstRooms.SelectedItem == null)
+            {
+                MessageBox.Show(
+                    "Vui lòng chọn phòng",
+                    "Thông báo",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            RoomItem room =
+                (RoomItem)lstRooms.SelectedItem;
+
+            if (MessageBox.Show(
+                    $"Bạn có chắc muốn rời phòng '{room.Name}' ?",
+                    "Xác nhận rời phòng",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question)
+                == DialogResult.Yes)
+            {
+                _client.LeaveRoom(room.Name);
+                _currentRoom = "";
+            }
         }
     }
 }

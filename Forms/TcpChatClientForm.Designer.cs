@@ -39,7 +39,15 @@ namespace TCPIP_Collaborative_Chat_System
             this.txtChatContent = new System.Windows.Forms.RichTextBox();
             this.Username = new System.Windows.Forms.Label();
             this.txtUsername = new System.Windows.Forms.TextBox();
+            this.grpRooms = new System.Windows.Forms.GroupBox();
+            this.lstRooms = new System.Windows.Forms.ListBox();
+            this.btnCreateRoom = new System.Windows.Forms.Button();
+            this.btnJoinRoom = new System.Windows.Forms.Button();
+            this.btnLeaveRoom = new System.Windows.Forms.Button();
+            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.txtRoomName = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.numServerPort)).BeginInit();
+            this.grpRooms.SuspendLayout();
             this.SuspendLayout();
             // 
             // lblServerIP
@@ -110,27 +118,28 @@ namespace TCPIP_Collaborative_Chat_System
             // 
             // txtMessage
             // 
-            this.txtMessage.Location = new System.Drawing.Point(12, 526);
+            this.txtMessage.Location = new System.Drawing.Point(12, 521);
             this.txtMessage.Name = "txtMessage";
-            this.txtMessage.Size = new System.Drawing.Size(599, 26);
+            this.txtMessage.Size = new System.Drawing.Size(322, 31);
             this.txtMessage.TabIndex = 6;
             this.txtMessage.Text = "";
             // 
             // btnSendMessage
             // 
-            this.btnSendMessage.Location = new System.Drawing.Point(649, 521);
+            this.btnSendMessage.BackColor = System.Drawing.Color.White;
+            this.btnSendMessage.Location = new System.Drawing.Point(348, 521);
             this.btnSendMessage.Name = "btnSendMessage";
             this.btnSendMessage.Size = new System.Drawing.Size(98, 31);
             this.btnSendMessage.TabIndex = 7;
             this.btnSendMessage.Text = "Gửi tin nhắn";
-            this.btnSendMessage.UseVisualStyleBackColor = true;
+            this.btnSendMessage.UseVisualStyleBackColor = false;
             this.btnSendMessage.Click += new System.EventHandler(this.btnSendMessage_Click);
             // 
             // txtChatContent
             // 
             this.txtChatContent.Location = new System.Drawing.Point(12, 109);
             this.txtChatContent.Name = "txtChatContent";
-            this.txtChatContent.Size = new System.Drawing.Size(749, 386);
+            this.txtChatContent.Size = new System.Drawing.Size(434, 386);
             this.txtChatContent.TabIndex = 8;
             this.txtChatContent.Text = "";
             this.txtChatContent.TextChanged += new System.EventHandler(this.txtChatContent_TextChanged);
@@ -152,12 +161,92 @@ namespace TCPIP_Collaborative_Chat_System
             this.txtUsername.Size = new System.Drawing.Size(100, 22);
             this.txtUsername.TabIndex = 10;
             // 
+            // grpRooms
+            // 
+            this.grpRooms.Controls.Add(this.txtRoomName);
+            this.grpRooms.Controls.Add(this.textBox1);
+            this.grpRooms.Controls.Add(this.lstRooms);
+            this.grpRooms.Location = new System.Drawing.Point(478, 109);
+            this.grpRooms.Name = "grpRooms";
+            this.grpRooms.Size = new System.Drawing.Size(296, 386);
+            this.grpRooms.TabIndex = 11;
+            this.grpRooms.TabStop = false;
+            // 
+            // lstRooms
+            // 
+            this.lstRooms.FormattingEnabled = true;
+            this.lstRooms.ItemHeight = 16;
+            this.lstRooms.Items.AddRange(new object[] {
+            "Study",
+            "Music",
+            "Team",
+            "Gaming",
+            "Work"});
+            this.lstRooms.Location = new System.Drawing.Point(0, 68);
+            this.lstRooms.Name = "lstRooms";
+            this.lstRooms.Size = new System.Drawing.Size(296, 244);
+            this.lstRooms.TabIndex = 0;
+            // 
+            // btnCreateRoom
+            // 
+            this.btnCreateRoom.BackColor = System.Drawing.Color.White;
+            this.btnCreateRoom.ForeColor = System.Drawing.Color.Black;
+            this.btnCreateRoom.Location = new System.Drawing.Point(478, 521);
+            this.btnCreateRoom.Name = "btnCreateRoom";
+            this.btnCreateRoom.Size = new System.Drawing.Size(95, 31);
+            this.btnCreateRoom.TabIndex = 6;
+            this.btnCreateRoom.Text = "Create";
+            this.btnCreateRoom.UseVisualStyleBackColor = false;
+            this.btnCreateRoom.Click += new System.EventHandler(this.btnCreateRoom_Click);
+            // 
+            // btnJoinRoom
+            // 
+            this.btnJoinRoom.Location = new System.Drawing.Point(588, 521);
+            this.btnJoinRoom.Name = "btnJoinRoom";
+            this.btnJoinRoom.Size = new System.Drawing.Size(86, 31);
+            this.btnJoinRoom.TabIndex = 12;
+            this.btnJoinRoom.Text = "Join";
+            this.btnJoinRoom.UseVisualStyleBackColor = true;
+            this.btnJoinRoom.Click += new System.EventHandler(this.btnJoinRoom_Click);
+            // 
+            // btnLeaveRoom
+            // 
+            this.btnLeaveRoom.Location = new System.Drawing.Point(689, 521);
+            this.btnLeaveRoom.Name = "btnLeaveRoom";
+            this.btnLeaveRoom.Size = new System.Drawing.Size(85, 31);
+            this.btnLeaveRoom.TabIndex = 13;
+            this.btnLeaveRoom.Text = "Leave";
+            this.btnLeaveRoom.UseVisualStyleBackColor = true;
+            this.btnLeaveRoom.Click += new System.EventHandler(this.btnLeaveRoom_Click);
+            // 
+            // textBox1
+            // 
+            this.textBox1.BackColor = System.Drawing.SystemColors.Info;
+            this.textBox1.Location = new System.Drawing.Point(96, 6);
+            this.textBox1.Name = "textBox1";
+            this.textBox1.Size = new System.Drawing.Size(100, 22);
+            this.textBox1.TabIndex = 6;
+            this.textBox1.Text = "Rooms";
+            this.textBox1.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.textBox1.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
+            // 
+            // txtRoomName
+            // 
+            this.txtRoomName.Location = new System.Drawing.Point(18, 331);
+            this.txtRoomName.Name = "txtRoomName";
+            this.txtRoomName.Size = new System.Drawing.Size(247, 22);
+            this.txtRoomName.TabIndex = 7;
+            // 
             // TcpChatClientForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
             this.ClientSize = new System.Drawing.Size(800, 574);
+            this.Controls.Add(this.btnLeaveRoom);
+            this.Controls.Add(this.btnJoinRoom);
+            this.Controls.Add(this.btnCreateRoom);
+            this.Controls.Add(this.grpRooms);
             this.Controls.Add(this.txtUsername);
             this.Controls.Add(this.Username);
             this.Controls.Add(this.txtChatContent);
@@ -175,6 +264,8 @@ namespace TCPIP_Collaborative_Chat_System
             this.Text = "TcpChatClientForm";
             this.TransparencyKey = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             ((System.ComponentModel.ISupportInitialize)(this.numServerPort)).EndInit();
+            this.grpRooms.ResumeLayout(false);
+            this.grpRooms.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -193,5 +284,12 @@ namespace TCPIP_Collaborative_Chat_System
         private System.Windows.Forms.RichTextBox txtChatContent;
         private System.Windows.Forms.Label Username;
         private System.Windows.Forms.TextBox txtUsername;
+        private System.Windows.Forms.GroupBox grpRooms;
+        public System.Windows.Forms.ListBox lstRooms;
+        private System.Windows.Forms.Button btnCreateRoom;
+        private System.Windows.Forms.Button btnJoinRoom;
+        private System.Windows.Forms.Button btnLeaveRoom;
+        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.TextBox txtRoomName;
     }
 }

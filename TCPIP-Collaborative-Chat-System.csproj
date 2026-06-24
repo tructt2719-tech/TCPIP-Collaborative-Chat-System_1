@@ -46,14 +46,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Forms\CreateRoomForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\CreateRoomForm.Designer.cs">
+      <DependentUpon>CreateRoomForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\StartupForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\StartupForm.Designer.cs">
       <DependentUpon>StartupForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Models\ChatRoom.cs" />
     <Compile Include="Models\MessageModel.cs" />
     <Compile Include="Models\PacketModel.cs" />
+    <Compile Include="Models\RoomItem.cs" />
     <Compile Include="Models\UserModel.cs" />
     <Compile Include="Network\ChatClientManager.cs" />
     <Compile Include="Network\ClientHandler.cs" />
@@ -79,6 +87,9 @@
     <Compile Include="Shared\PacketParser.cs" />
     <Compile Include="Shared\PacketTypes.cs" />
     <Compile Include="Utils\UIHelper.cs" />
+    <EmbeddedResource Include="Forms\CreateRoomForm.resx">
+      <DependentUpon>CreateRoomForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\StartupForm.resx">
       <DependentUpon>StartupForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -113,6 +124,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include=".gitignore" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Extra\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

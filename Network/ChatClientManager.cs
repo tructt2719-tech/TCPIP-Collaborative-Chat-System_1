@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Windows.Forms;
 using TCPIP_Collaborative_Chat_System.Shared;
 
 namespace TCPIP_Collaborative_Chat_System.Network
@@ -19,6 +20,12 @@ namespace TCPIP_Collaborative_Chat_System.Network
         public event Action<string> OnLoginResult;   
         public event Action<string> OnSystemMessage;
         public event Action<List<string>> OnUserListUpdated;
+        public event Action<string> OnRoomMessage;
+        public event Action<string> OnRoomUsers;
+        public event Action<string> OnRoomUserJoined;
+        public event Action<string> OnRoomUserLeft;
+        public event Action<List<string>> OnRoomListReceived;
+
 
         private Socket _socket;
         private readonly byte[] _buffer = new byte[1024];
@@ -90,6 +97,14 @@ namespace TCPIP_Collaborative_Chat_System.Network
                 OnStatusChanged?.Invoke("Gửi tin nhắn thất bại: " + ex.Message);
                 HandleDisconnected(socket);
             }
+        }
+
+        public void SendRoomMessage(string roomName, string message)
+        {
+            if (!IsConnected)
+                return;
+            string packet = $"ROOM_MSG|{roomName}|{message}\n";
+            _socket.Send(Encoding.UTF8.GetBytes(packet));
         }
 
         public void Disconnect()
@@ -221,6 +236,56 @@ namespace TCPIP_Collaborative_Chat_System.Network
                             if (parts.Length >= 3)
                                 OnMessageReceived?.Invoke(parts[1] + ": " + parts[2]);
                             break;
+
+                        case "ROOM_MSG":
+                            if (parts.Length >= 4)
+                            {
+                                OnRoomMessage?.Invoke(
+                                    "[" + parts[1] + "] "
+                                    + parts[2]
+                                    + ": "
+                                    + parts[3]);
+                            }
+                            break;
+
+                        case "ROOM_USERS":
+                            if (parts.Length >= 2)
+                            {
+                                OnRoomUsers?.Invoke(string.Join(", ", parts.Skip(2)));
+                            }
+                            break;
+
+                        case "ROOM_USER_JOINED":
+                            if (parts.Length >= 3)
+                            {
+                                OnRoomUserJoined?.Invoke($"{parts[2]} joined {parts[1]}");
+                            }
+                            break;
+
+                        case "ROOM_USER_LEFT":
+                            if (parts.Length >= 3)
+                            {
+                                OnRoomUserLeft?.Invoke($"{parts[2]} left {parts[1]}");
+                            }
+                            break;
+
+                        case "LEAVE_ROOM_OK":
+                            {
+                                if (parts.Length >= 2)
+                                {
+                                    OnMessageReceived?.Invoke(
+                                        $"Đã rời phòng {parts[1]}");
+                                }
+                            }
+                            break;
+
+                        case "ROOM_LIST":
+                            {
+                                List<string> rooms = parts.Skip(1).ToList();
+                                OnRoomListReceived?.Invoke(rooms);
+                                break;
+                            }
+                    
                     }
                 });
 
@@ -315,6 +380,41 @@ namespace TCPIP_Collaborative_Chat_System.Network
 
             return -1;
         }
+        public void CreateRoom(string roomName, int maxUsers, bool isPrivate, string password)
+        {
+            if (!IsConnected)
+                return;
 
+            string packet;
+
+            if (isPrivate)
+            {
+                packet =
+                    $"CREATE_ROOM|{roomName}|{maxUsers}|PRIVATE|{password}\n";
+            }
+            else
+            {
+                packet =
+                    $"CREATE_ROOM|{roomName}|{maxUsers}|PUBLIC\n";
+            }
+
+            _socket.Send(
+                Encoding.UTF8.GetBytes(packet));
+        }
+
+        public void JoinRoom(string roomName, string password = "")
+        {
+            if (!IsConnected)
+                return;
+            string packet = $"JOIN_ROOM|{roomName}|{password}\n";
+            _socket.Send(Encoding.UTF8.GetBytes(packet));
+        }
+
+        public void LeaveRoom(string roomName)
+        {
+            if (!IsConnected) return;
+            string packet = $"LEAVE_ROOM|{roomName}\n";
+            _socket.Send(Encoding.UTF8.GetBytes(packet));
+        }
     }
 }
