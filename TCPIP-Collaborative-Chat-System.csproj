@@ -111,12 +111,15 @@
 		<Compile Include="Models\MessageModel.cs" />
 		<Compile Include="Models\PacketModel.cs" />
 		<Compile Include="Models\UserModel.cs" />
+		<Compile Include="Models\ChatRoomModel.cs" />
 
 		<!-- Network -->
 		<Compile Include="Network\ChatClientManager.cs" />
 		<Compile Include="Network\ClientHandler.cs" />
 		<Compile Include="Network\TcpChatServer.cs" />
 		<Compile Include="Network\UserStore.cs" />
+		<Compile Include="Network\RoomManager.cs" />
+		<Compile Include="Network\MessageHistoryStore.cs" />
 
 		<!-- Services -->
 		<Compile Include="Services\MessageService.cs" />
@@ -157,13 +160,13 @@
 		<EmbeddedResource Include="Forms\LoginForm.resx">
 			<DependentUpon>LoginForm.cs</DependentUpon>
 		</EmbeddedResource>
+		
+		<EmbeddedResource Include="Forms\TcpChatClientForm.resx">
+            		<DependentUpon>TcpChatClientForm.cs</DependentUpon>
+        	</EmbeddedResource>
 
 		<EmbeddedResource Include="Forms\RegisterForm.resx">
 			<DependentUpon>RegisterForm.cs</DependentUpon>
-		</EmbeddedResource>
-
-		<EmbeddedResource Include="Forms\TcpChatClientForm.resx">
-			<DependentUpon>TcpChatClientForm.cs</DependentUpon>
 		</EmbeddedResource>
 
 		<EmbeddedResource Include="Forms\TcpChatServerForm.resx">
