@@ -17,7 +17,6 @@ namespace TCPIP_Collaborative_Chat_System.Database
 
         public static void Initialize()
         {
-            MessageBox.Show(AppDomain.CurrentDomain.BaseDirectory);
             if (!File.Exists(_dbFile))
             {
                 SQLiteConnection.CreateFile(_dbFile);

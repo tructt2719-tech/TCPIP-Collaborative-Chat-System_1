@@ -29,6 +29,7 @@ namespace TCPIP_Collaborative_Chat_System
         private void InitializeComponent()
         {
             this.lblServerPort = new System.Windows.Forms.Label();
+            this.lblServerIP = new System.Windows.Forms.Label();
             this.numServerPort = new System.Windows.Forms.NumericUpDown();
             this.btnInitServer = new System.Windows.Forms.Button();
             this.lblStatus = new System.Windows.Forms.Label();
@@ -41,15 +42,24 @@ namespace TCPIP_Collaborative_Chat_System
             // lblServerPort
             // 
             this.lblServerPort.AutoSize = true;
-            this.lblServerPort.Location = new System.Drawing.Point(12, 23);
+            this.lblServerPort.Location = new System.Drawing.Point(33, 27);
             this.lblServerPort.Name = "lblServerPort";
-            this.lblServerPort.Size = new System.Drawing.Size(145, 16);
+            this.lblServerPort.Size = new System.Drawing.Size(34, 16);
             this.lblServerPort.TabIndex = 0;
-            this.lblServerPort.Text = "Server chạy trên lblPort";
+            this.lblServerPort.Text = "Port:";
+            // 
+            // lblServerIP
+            // 
+            this.lblServerIP.AutoSize = true;
+            this.lblServerIP.Location = new System.Drawing.Point(327, 27);
+            this.lblServerIP.Name = "lblServerIP";
+            this.lblServerIP.Size = new System.Drawing.Size(77, 16);
+            this.lblServerIP.TabIndex = 8;
+            this.lblServerIP.Text = "IP : Chưa có";
             // 
             // numServerPort
             // 
-            this.numServerPort.Location = new System.Drawing.Point(174, 23);
+            this.numServerPort.Location = new System.Drawing.Point(98, 21);
             this.numServerPort.Maximum = new decimal(new int[] {
             65535,
             0,
@@ -123,6 +133,7 @@ namespace TCPIP_Collaborative_Chat_System
             this.Controls.Add(this.btnInitServer);
             this.Controls.Add(this.numServerPort);
             this.Controls.Add(this.lblServerPort);
+            this.Controls.Add(this.lblServerIP);
             this.Name = "TcpChatServerForm";
             this.Text = "TcpChatServerForm";
             ((System.ComponentModel.ISupportInitialize)(this.numServerPort)).EndInit();
@@ -140,5 +151,6 @@ namespace TCPIP_Collaborative_Chat_System
         private System.Windows.Forms.Button btnSendMessage;
         private System.Windows.Forms.RichTextBox txtChatContent;
         private System.Windows.Forms.TextBox txtMessage;
+        private System.Windows.Forms.Label lblServerIP;
     }
 }

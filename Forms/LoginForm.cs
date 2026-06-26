@@ -21,8 +21,37 @@ namespace TCPIP_Collaborative_Chat_System.Forms
             InitializeComponent();
             _mode = mode;
             AcceptButton = btnLogin;
-            LoadRememberUser();
-            LoadSettings();
+            ConfigureLoginMode();
+        }
+        private void ConfigureLoginMode()
+        {
+            bool isClient = _mode == AppMode.Client;
+            lblMode.Text = isClient ? "Client Login" : "Administrator Login";
+            chkRemember.Visible = isClient;
+            btnRegister.Visible = true;
+            if (isClient)
+            {
+                LoadRememberUser();
+                LoadSettings();
+                LoadRemember();
+            }
+            else
+            {
+                txtUsername.Clear();
+                txtPassword.Clear();
+                txtUsername.Focus();
+            }
+        }
+        private void LoadRemember()
+        {
+            if (!SettingsManager.Exists())
+                return;
+            bool remember = SettingsManager.Read("Remember") == "True";
+            chkRemember.Checked = remember;
+            if (!remember)
+                return;
+            txtUsername.Text = SettingsManager.Read("Username");
+
         }
         private void LoadSettings()
         {
@@ -88,28 +117,23 @@ namespace TCPIP_Collaborative_Chat_System.Forms
                 txtPassword.Focus();
                 return;
             }
-            
-            // Remember 
-            UserRepository.ClearRememberUsers();
-            UserRepository.UpdateRememberMe(username, chkRemember.Checked);
-            if (chkRemember.Checked)
-            {
-                SettingsManager.Save(username, true, "127.0.0.1", 12345);
-            }
-            else
-            {
-                SettingsManager.Delete();
-            }
-
-            //Client
+            //Remember chỉ Client mới cần vì admin cần bảo mật cao
             if (_mode == AppMode.Client)
             {
-                TcpChatClientForm frm = new TcpChatClientForm(username, password);
-                frm.Show();
+                UserRepository.ClearRememberUsers();
+                UserRepository.UpdateRememberMe(username, chkRemember.Checked);
+            }
+
+            // Client
+            if (_mode == AppMode.Client)
+            {
+                TcpChatClientForm client = new TcpChatClientForm(username, password, chkRemember.Checked);
+                client.Show();
                 Hide();
                 return;
             }
-            //Server
+
+            // Server
             TcpChatServerForm server = new TcpChatServerForm();
             server.Show();
             Hide();

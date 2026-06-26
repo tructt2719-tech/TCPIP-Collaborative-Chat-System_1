@@ -51,7 +51,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Client\ClientSettings.cs" />
     <Compile Include="Client\SettingsManager.cs" />
     <Compile Include="Database\DatabaseManager.cs" />
     <Compile Include="Database\MessageRepository.cs" />

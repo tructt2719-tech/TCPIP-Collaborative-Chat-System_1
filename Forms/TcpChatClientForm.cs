@@ -1,8 +1,10 @@
 using System;
+using System.Net;
 using System.Windows.Forms;
+using TCPIP_Collaborative_Chat_System.Client;
 using TCPIP_Collaborative_Chat_System.Forms;
-using TCPIP_Collaborative_Chat_System.Network;
 using TCPIP_Collaborative_Chat_System.Models;
+using TCPIP_Collaborative_Chat_System.Network;
 
 namespace TCPIP_Collaborative_Chat_System
 {
@@ -11,14 +13,34 @@ namespace TCPIP_Collaborative_Chat_System
         private string _currentRoom = "";
         private readonly string _username;
         private readonly string _password;
-        public TcpChatClientForm(string username, string password)
+        private readonly bool _remember;
+        public TcpChatClientForm(string username, string password, bool remember)
         {
             InitializeComponent();
             _username = username;
             _password = password;
+            _remember = remember;
             txtUsername.Text = username;
             txtUsername.Enabled = false;
             WireClientEvents();
+            LoadConnectionSettings();
+        }
+        private void LoadConnectionSettings()
+        {
+            numServerPort.Value = 12345;
+            if (!SettingsManager.Exists())
+                return;
+            string ip = SettingsManager.Read("ServerIP");
+            if (!string.IsNullOrWhiteSpace(ip))
+            {
+                txtServerIP.Text = ip;
+            }
+            string port = SettingsManager.Read("Port");
+            int p;
+            if (int.TryParse(port, out p))
+            {
+                numServerPort.Value = p;
+            }
         }
 
         private readonly ChatClientManager _client = new ChatClientManager();
@@ -27,29 +49,37 @@ namespace TCPIP_Collaborative_Chat_System
         {
             if (_client.IsConnected)
             {
-                MessageBox.Show(
-                    "Client đã kết nối rồi!",
-                    "Thông báo",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
+                MessageBox.Show("Client đã kết nối rồi!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                 return;
             }
 
             try
             {         
-                btnConnect.Enabled = false;
+                if (string.IsNullOrWhiteSpace(txtServerIP.Text))
+                {
+                    MessageBox.Show("Vui lòng nhập địa chỉ IP Server.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txtServerIP.Focus();
+
+                    return;
+                }
+
+                IPAddress ip;
+
+                if (!IPAddress.TryParse(txtServerIP.Text.Trim(), out ip))
+                {
+                    MessageBox.Show("Địa chỉ IP không hợp lệ.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txtServerIP.Focus();
+
+                    return;
+                }
+
                 _client.Connect(txtServerIP.Text.Trim(), (int)numServerPort.Value);
             }
             catch (Exception ex)
             {
                 btnConnect.Enabled = true;
-
-                MessageBox.Show(
-                    "Lỗi kết nối: " + ex.Message,
-                    "Lỗi",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                MessageBox.Show("Lỗi kết nối: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -64,9 +94,16 @@ namespace TCPIP_Collaborative_Chat_System
                 {
                     btnConnect.Enabled = true;
                 }
-
                 if (message == "Kết nối thành công.")
                 {
+                    if (_remember)
+                    {
+                        SettingsManager.Save(_username, true, txtServerIP.Text.Trim(), (int)numServerPort.Value);
+                    }
+                    else
+                    {
+                        SettingsManager.Delete();
+                    }
                     _client.Login(_username, _password);
                 }
             });
@@ -116,16 +153,9 @@ namespace TCPIP_Collaborative_Chat_System
 
                     foreach (var roomInfo in rooms)
                     {
-                        string[] data =
-                            roomInfo.Split(',');
-
-                        string roomName =
-                            data[0];
-
-                        bool isPrivate =
-                            data.Length > 1 &&
-                            data[1] == "PRIVATE";
-
+                        string[] data = roomInfo.Split(',');
+                        string roomName =  data[0];
+                        bool isPrivate = data.Length > 1 && data[1] == "PRIVATE";
                         lstRooms.Items.Add(
                             new RoomItem
                             {
@@ -137,7 +167,6 @@ namespace TCPIP_Collaborative_Chat_System
             };
 
         }
-
         private void SafeInvoke(Action action)
         {
             if (IsDisposed) return;
@@ -150,7 +179,6 @@ namespace TCPIP_Collaborative_Chat_System
                 action();
             }
         }
-
         private void UpdateStatus(string s)
         {
             lblStatus.Text = s;
@@ -247,7 +275,6 @@ namespace TCPIP_Collaborative_Chat_System
                     return;
                 }
             }
-
             txtChatContent.Clear();
             _client.JoinRoom(roomName, password);
             _currentRoom = room.Name;
