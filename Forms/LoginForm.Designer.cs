@@ -2,221 +2,176 @@ namespace TCPIP_Collaborative_Chat_System.Forms
 {
     partial class LoginForm
     {
+        /// <summary>
+        /// Required designer variable.
+        /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        private System.Windows.Forms.Label lblTitle;
-        private System.Windows.Forms.Label lblUsername;
-        private System.Windows.Forms.Label lblPassword;
-        private System.Windows.Forms.Label lblIP;
-        private System.Windows.Forms.Label lblPort;
-        private System.Windows.Forms.Label lblKey;
-
-        private System.Windows.Forms.TextBox txtUsername;
-        private System.Windows.Forms.TextBox txtPassword;
-        private System.Windows.Forms.TextBox txtIP;
-        private System.Windows.Forms.NumericUpDown numPort;
-        private System.Windows.Forms.TextBox txtKey;
-
-        private System.Windows.Forms.CheckBox chkRemember;
-
-        private System.Windows.Forms.Button btnLogin;
-        private System.Windows.Forms.Button btnRegister;
-
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
+            {
                 components.Dispose();
-
+            }
             base.Dispose(disposing);
         }
 
+        #region Windows Form Designer generated code
+
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
         private void InitializeComponent()
         {
-            this.lblTitle = new System.Windows.Forms.Label();
-            this.lblUsername = new System.Windows.Forms.Label();
-            this.lblPassword = new System.Windows.Forms.Label();
-            this.lblIP = new System.Windows.Forms.Label();
-            this.lblPort = new System.Windows.Forms.Label();
-            this.lblKey = new System.Windows.Forms.Label();
-            this.txtUsername = new System.Windows.Forms.TextBox();
-            this.txtPassword = new System.Windows.Forms.TextBox();
-            this.txtIP = new System.Windows.Forms.TextBox();
-            this.numPort = new System.Windows.Forms.NumericUpDown();
-            this.txtKey = new System.Windows.Forms.TextBox();
+            this.TCPIPCollaborativeChat = new System.Windows.Forms.Label();
+            this.lblMode = new System.Windows.Forms.Label();
+            this.panel1 = new System.Windows.Forms.Panel();
             this.chkRemember = new System.Windows.Forms.CheckBox();
-            this.btnLogin = new System.Windows.Forms.Button();
             this.btnRegister = new System.Windows.Forms.Button();
-            ((System.ComponentModel.ISupportInitialize)(this.numPort)).BeginInit();
+            this.btnLogin = new System.Windows.Forms.Button();
+            this.txtPassword = new System.Windows.Forms.TextBox();
+            this.txtUsername = new System.Windows.Forms.TextBox();
+            this.Password = new System.Windows.Forms.Label();
+            this.UserName = new System.Windows.Forms.Label();
+            this.panel1.SuspendLayout();
             this.SuspendLayout();
-            //
-            // lblTitle
-            //
-            this.lblTitle.AutoSize = false;
-            this.lblTitle.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold);
-            this.lblTitle.ForeColor = System.Drawing.Color.DodgerBlue;
-            this.lblTitle.Location = new System.Drawing.Point(0, 40);
-            this.lblTitle.Name = "lblTitle";
-            this.lblTitle.Size = new System.Drawing.Size(400, 40);
-            this.lblTitle.TabIndex = 0;
-            this.lblTitle.Text = "ĐĂNG NHẬP";
-            this.lblTitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            //
-            // lblUsername
-            //
-            this.lblUsername.AutoSize = true;
-            this.lblUsername.ForeColor = System.Drawing.Color.White;
-            this.lblUsername.Location = new System.Drawing.Point(40, 120);
-            this.lblUsername.Name = "lblUsername";
-            this.lblUsername.Size = new System.Drawing.Size(60, 15);
-            this.lblUsername.TabIndex = 1;
-            this.lblUsername.Text = "Username";
-            //
-            // lblPassword
-            //
-            this.lblPassword.AutoSize = true;
-            this.lblPassword.ForeColor = System.Drawing.Color.White;
-            this.lblPassword.Location = new System.Drawing.Point(40, 170);
-            this.lblPassword.Name = "lblPassword";
-            this.lblPassword.Size = new System.Drawing.Size(57, 15);
-            this.lblPassword.TabIndex = 2;
-            this.lblPassword.Text = "Password";
-            //
-            // lblIP
-            //
-            this.lblIP.AutoSize = true;
-            this.lblIP.ForeColor = System.Drawing.Color.White;
-            this.lblIP.Location = new System.Drawing.Point(40, 220);
-            this.lblIP.Name = "lblIP";
-            this.lblIP.Size = new System.Drawing.Size(62, 15);
-            this.lblIP.TabIndex = 3;
-            this.lblIP.Text = "IP Address";
-            //
-            // lblPort
-            //
-            this.lblPort.AutoSize = true;
-            this.lblPort.ForeColor = System.Drawing.Color.White;
-            this.lblPort.Location = new System.Drawing.Point(40, 270);
-            this.lblPort.Name = "lblPort";
-            this.lblPort.Size = new System.Drawing.Size(29, 15);
-            this.lblPort.TabIndex = 4;
-            this.lblPort.Text = "Port";
-            //
-            // lblKey
-            //
-            this.lblKey.AutoSize = true;
-            this.lblKey.ForeColor = System.Drawing.Color.White;
-            this.lblKey.Location = new System.Drawing.Point(40, 320);
-            this.lblKey.Name = "lblKey";
-            this.lblKey.Size = new System.Drawing.Size(49, 15);
-            this.lblKey.TabIndex = 5;
-            this.lblKey.Text = "AES Key";
-            //
-            // txtUsername
-            //
-            this.txtUsername.Location = new System.Drawing.Point(150, 115);
-            this.txtUsername.Name = "txtUsername";
-            this.txtUsername.Size = new System.Drawing.Size(200, 23);
-            this.txtUsername.TabIndex = 6;
-            //
-            // txtPassword
-            //
-            this.txtPassword.Location = new System.Drawing.Point(150, 165);
-            this.txtPassword.Name = "txtPassword";
-            this.txtPassword.PasswordChar = '*';
-            this.txtPassword.Size = new System.Drawing.Size(200, 23);
-            this.txtPassword.TabIndex = 7;
-            //
-            // txtIP
-            //
-            this.txtIP.Location = new System.Drawing.Point(150, 215);
-            this.txtIP.Name = "txtIP";
-            this.txtIP.Size = new System.Drawing.Size(200, 23);
-            this.txtIP.TabIndex = 8;
-            this.txtIP.Text = "127.0.0.1";
-            //
-            // numPort
-            //
-            this.numPort.Location = new System.Drawing.Point(150, 265);
-            this.numPort.Maximum = new decimal(new int[] { 65535, 0, 0, 0 });
-            this.numPort.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
-            this.numPort.Name = "numPort";
-            this.numPort.Size = new System.Drawing.Size(200, 23);
-            this.numPort.TabIndex = 9;
-            this.numPort.Value = new decimal(new int[] { 9000, 0, 0, 0 });
-            //
-            // txtKey
-            //
-            this.txtKey.Location = new System.Drawing.Point(150, 315);
-            this.txtKey.Name = "txtKey";
-            this.txtKey.Size = new System.Drawing.Size(200, 23);
-            this.txtKey.TabIndex = 10;
-            this.txtKey.Text = "123";
-            //
+            // 
+            // TCPIPCollaborativeChat
+            // 
+            this.TCPIPCollaborativeChat.AutoSize = true;
+            this.TCPIPCollaborativeChat.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
+            this.TCPIPCollaborativeChat.Font = new System.Drawing.Font("Microsoft Yi Baiti", 13.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TCPIPCollaborativeChat.ForeColor = System.Drawing.Color.Black;
+            this.TCPIPCollaborativeChat.Location = new System.Drawing.Point(191, 0);
+            this.TCPIPCollaborativeChat.Name = "TCPIPCollaborativeChat";
+            this.TCPIPCollaborativeChat.Size = new System.Drawing.Size(261, 23);
+            this.TCPIPCollaborativeChat.TabIndex = 0;
+            this.TCPIPCollaborativeChat.Text = "TCP/IP Collaborative Chat";
+            this.TCPIPCollaborativeChat.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            // 
+            // lblMode
+            // 
+            this.lblMode.AutoSize = true;
+            this.lblMode.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold);
+            this.lblMode.ForeColor = System.Drawing.Color.Black;
+            this.lblMode.Location = new System.Drawing.Point(265, 33);
+            this.lblMode.Name = "lblMode";
+            this.lblMode.Size = new System.Drawing.Size(90, 18);
+            this.lblMode.TabIndex = 10;
+            this.lblMode.Text = "User Login";
+            // 
+            // panel1
+            // 
+            this.panel1.BackColor = System.Drawing.SystemColors.Control;
+            this.panel1.Controls.Add(this.lblMode);
+            this.panel1.Controls.Add(this.chkRemember);
+            this.panel1.Controls.Add(this.btnRegister);
+            this.panel1.Controls.Add(this.btnLogin);
+            this.panel1.Controls.Add(this.txtPassword);
+            this.panel1.Controls.Add(this.txtUsername);
+            this.panel1.Controls.Add(this.Password);
+            this.panel1.Controls.Add(this.UserName);
+            this.panel1.Controls.Add(this.TCPIPCollaborativeChat);
+            this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel1.Location = new System.Drawing.Point(0, 0);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(702, 487);
+            this.panel1.TabIndex = 1;
+            // 
             // chkRemember
-            //
+            // 
             this.chkRemember.AutoSize = true;
-            this.chkRemember.ForeColor = System.Drawing.Color.White;
-            this.chkRemember.Location = new System.Drawing.Point(150, 360);
+            this.chkRemember.Location = new System.Drawing.Point(28, 247);
             this.chkRemember.Name = "chkRemember";
-            this.chkRemember.Size = new System.Drawing.Size(95, 19);
-            this.chkRemember.TabIndex = 11;
-            this.chkRemember.Text = "Remember me";
+            this.chkRemember.Size = new System.Drawing.Size(97, 20);
+            this.chkRemember.TabIndex = 9;
+            this.chkRemember.Text = "Remember";
             this.chkRemember.UseVisualStyleBackColor = true;
-            //
-            // btnLogin
-            //
-            this.btnLogin.BackColor = System.Drawing.Color.RoyalBlue;
-            this.btnLogin.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnLogin.ForeColor = System.Drawing.Color.White;
-            this.btnLogin.Location = new System.Drawing.Point(40, 410);
-            this.btnLogin.Name = "btnLogin";
-            this.btnLogin.Size = new System.Drawing.Size(140, 40);
-            this.btnLogin.TabIndex = 12;
-            this.btnLogin.Text = "LOGIN";
-            this.btnLogin.UseVisualStyleBackColor = false;
-            this.btnLogin.Click += new System.EventHandler(this.btnLogin_Click);
-            //
+            // 
             // btnRegister
-            //
-            this.btnRegister.BackColor = System.Drawing.Color.DimGray;
-            this.btnRegister.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnRegister.ForeColor = System.Drawing.Color.White;
-            this.btnRegister.Location = new System.Drawing.Point(210, 410);
+            // 
+            this.btnRegister.Location = new System.Drawing.Point(377, 173);
             this.btnRegister.Name = "btnRegister";
-            this.btnRegister.Size = new System.Drawing.Size(140, 40);
-            this.btnRegister.TabIndex = 13;
-            this.btnRegister.Text = "REGISTER";
-            this.btnRegister.UseVisualStyleBackColor = false;
+            this.btnRegister.Size = new System.Drawing.Size(75, 43);
+            this.btnRegister.TabIndex = 8;
+            this.btnRegister.Text = "Register";
+            this.btnRegister.UseVisualStyleBackColor = true;
             this.btnRegister.Click += new System.EventHandler(this.btnRegister_Click);
-            //
+            // 
+            // btnLogin
+            // 
+            this.btnLogin.Location = new System.Drawing.Point(195, 173);
+            this.btnLogin.Name = "btnLogin";
+            this.btnLogin.Size = new System.Drawing.Size(75, 43);
+            this.btnLogin.TabIndex = 7;
+            this.btnLogin.Text = "Login";
+            this.btnLogin.UseVisualStyleBackColor = true;
+            this.btnLogin.Click += new System.EventHandler(this.btnLogin_Click);
+            // 
+            // txtPassword
+            // 
+            this.txtPassword.Location = new System.Drawing.Point(125, 118);
+            this.txtPassword.Name = "txtPassword";
+            this.txtPassword.Size = new System.Drawing.Size(497, 22);
+            this.txtPassword.TabIndex = 4;
+            this.txtPassword.UseSystemPasswordChar = true;
+            // 
+            // txtUsername
+            // 
+            this.txtUsername.Location = new System.Drawing.Point(125, 64);
+            this.txtUsername.Name = "txtUsername";
+            this.txtUsername.Size = new System.Drawing.Size(497, 22);
+            this.txtUsername.TabIndex = 3;
+            // 
+            // Password
+            // 
+            this.Password.AutoSize = true;
+            this.Password.Location = new System.Drawing.Point(25, 124);
+            this.Password.Name = "Password";
+            this.Password.Size = new System.Drawing.Size(70, 16);
+            this.Password.TabIndex = 2;
+            this.Password.Text = "Password:";
+            // 
+            // UserName
+            // 
+            this.UserName.AutoSize = true;
+            this.UserName.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.UserName.Location = new System.Drawing.Point(25, 70);
+            this.UserName.Name = "UserName";
+            this.UserName.Size = new System.Drawing.Size(79, 16);
+            this.UserName.TabIndex = 1;
+            this.UserName.Text = "User Name:";
+            // 
             // LoginForm
-            //
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(15, 23, 42);
-            this.ClientSize = new System.Drawing.Size(400, 520);
-            this.Controls.Add(this.lblTitle);
-            this.Controls.Add(this.lblUsername);
-            this.Controls.Add(this.lblPassword);
-            this.Controls.Add(this.lblIP);
-            this.Controls.Add(this.lblPort);
-            this.Controls.Add(this.lblKey);
-            this.Controls.Add(this.txtUsername);
-            this.Controls.Add(this.txtPassword);
-            this.Controls.Add(this.txtIP);
-            this.Controls.Add(this.numPort);
-            this.Controls.Add(this.txtKey);
-            this.Controls.Add(this.chkRemember);
-            this.Controls.Add(this.btnLogin);
-            this.Controls.Add(this.btnRegister);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.MaximizeBox = false;
+            this.ClientSize = new System.Drawing.Size(702, 487);
+            this.Controls.Add(this.panel1);
             this.Name = "LoginForm";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Login";
-            ((System.ComponentModel.ISupportInitialize)(this.numPort)).EndInit();
+            this.Text = "LoginForm";
+            this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
             this.ResumeLayout(false);
-            this.PerformLayout();
+
         }
+
+        #endregion
+
+        private System.Windows.Forms.Label TCPIPCollaborativeChat;
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.TextBox txtUsername;
+        private System.Windows.Forms.Label Password;
+        private System.Windows.Forms.Label UserName;
+        private System.Windows.Forms.Button btnLogin;
+        private System.Windows.Forms.TextBox txtPassword;
+        private System.Windows.Forms.CheckBox chkRemember;
+        private System.Windows.Forms.Button btnRegister;
+        private System.Windows.Forms.Label lblMode;
     }
 }

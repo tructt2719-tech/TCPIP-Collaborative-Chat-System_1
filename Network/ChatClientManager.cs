@@ -4,7 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
+using System.Windows.Forms;
 using TCPIP_Collaborative_Chat_System.Shared;
 
 namespace TCPIP_Collaborative_Chat_System.Network
@@ -67,20 +67,17 @@ namespace TCPIP_Collaborative_Chat_System.Network
         public event Action OnDisconnected;
         public event Action<string> OnLoginResult;
         public event Action<string> OnSystemMessage;
-        public event Action<List<OnlineUserInfo>> OnUserListUpdated;
-        public event Action<string, string, string> OnEmojiReaction; // messageId, reactor, emoji
+        public event Action<List<string>> OnUserListUpdated;
+        public event Action<string> OnRoomMessage;
+        public event Action<string> OnRoomUsers;
+        public event Action<string> OnRoomUserJoined;
+        public event Action<string> OnRoomUserLeft;
+        public event Action<string> OnRoomHistory;
+        public event Action<List<string>> OnRoomListReceived;
 
-        // ===== Giai đoạn 3: Multi-Room events =====
-        public event Action<List<string>> OnRoomListUpdated;       // danh sách room hiện có trên server
-        public event Action<string> OnJoinRoomOk;                  // tên room vừa join thành công
-        public event Action<string, string> OnRoomCreateResult;    // (roomName, "OK" hoặc lý do lỗi)
-        public event Action<string, string> OnRoomSystemMessage;   // (roomName, message) - vd "Alice joined"
-        public event Action<string, List<string>> OnRoomUserListUpdated; // (roomName, usernames trong room đó)
-        public event Action<string, string> OnRoomError;           // (errorCode, detail)
 
-        public Socket _socket;
-        private readonly byte[] _buffer = new byte[8192];
-
+        private Socket _socket;
+        private readonly byte[] _buffer = new byte[1024];
         private readonly StringBuilder _receiveBuffer = new StringBuilder();
 
         private bool _isConnecting;
@@ -485,8 +482,15 @@ namespace TCPIP_Collaborative_Chat_System.Network
             }
         }
 
-        /// <summary>Forward trong room. Chỉ cần originalMessageId - Server tra content + originalSender.</summary>
-        public void SendRoomForward(string roomName, string originalMessageId)
+        public void SendRoomMessage(string roomName, string message)
+        {
+            if (!IsConnected)
+                return;
+            string packet = $"ROOM_MSG|{roomName}|{message}\n";
+            _socket.Send(Encoding.UTF8.GetBytes(packet));
+        }
+
+        public void Disconnect()
         {
             Socket socket = _socket;
             if (socket == null || !socket.Connected)
@@ -777,140 +781,75 @@ namespace TCPIP_Collaborative_Chat_System.Network
                     }
                     break;
 
-                case PacketTypes.ReplyMessage:
-                    // RELY_MESSAGE|msgId|sender|content|replyToId|replyToSender|replyToPreview
-                    if (parts.Length >= 7)
-                    {
-                        OnChatMessage?.Invoke(new ChatMessageInfo
-                        {
-                            MessageId = parts[1],
-                            Sender = parts[2],
-                            Content = parts[3],
-                            IsReply = true,
-                            ReplyToId = parts[4],
-                            ReplyToSender = parts[5],
-                            ReplyToPreview = parts[6]
-                        });
+                        case "MESSAGE":
+                            if (parts.Length >= 3)
+                                OnMessageReceived?.Invoke(parts[1] + ": " + parts[2]);
+                            break;
+
+                        case "ROOM_MSG":
+                            if (parts.Length >= 4)
+                            {
+                                OnRoomMessage?.Invoke(
+                                    "[" + parts[1] + "] "
+                                    + parts[2]
+                                    + ": "
+                                    + parts[3]);
+                            }
+                            break;
+
+                        case "ROOM_HISTORY":
+                            {
+                                if (parts.Length >= 5)
+                                {
+                                    OnRoomHistory?.Invoke(
+                                        "[" + parts[4] + "] "
+                                        + parts[2]
+                                        + ": "
+                                        + parts[3]);
+                                }
+                                break;
+                            }
+
+                        case "ROOM_USERS":
+                            if (parts.Length >= 2)
+                            {
+                                OnRoomUsers?.Invoke(string.Join(", ", parts.Skip(2)));
+                            }
+                            break;
+
+                        case "ROOM_USER_JOINED":
+                            if (parts.Length >= 3)
+                            {
+                                OnRoomUserJoined?.Invoke($"{parts[2]} joined {parts[1]}");
+                            }
+                            break;
+
+                        case "ROOM_USER_LEFT":
+                            if (parts.Length >= 3)
+                            {
+                                OnRoomUserLeft?.Invoke($"{parts[2]} left {parts[1]}");
+                            }
+                            break;
+
+                        case "LEAVE_ROOM_OK":
+                            {
+                                if (parts.Length >= 2)
+                                {
+                                    OnMessageReceived?.Invoke(
+                                        $"Đã rời phòng {parts[1]}");
+                                }
+                            }
+                            break;
+
+                        case "ROOM_LIST":
+                            {
+                                List<string> rooms = parts.Skip(1).ToList();
+                                OnRoomListReceived?.Invoke(rooms);
+                                break;
+                            }
+                    
                     }
-                    break;
-
-                case PacketTypes.ForwardMessage:
-                    // FORWARD_MESSAGE|msgId|sender|content|originalSender
-                    if (parts.Length >= 5)
-                    {
-                        OnChatMessage?.Invoke(new ChatMessageInfo
-                        {
-                            MessageId = parts[1],
-                            Sender = parts[2],
-                            Content = parts[3],
-                            IsForwarded = true,
-                            OriginalSender = parts[4]
-                        });
-                    }
-                    break;
-
-                case PacketTypes.EmojiReactionBroadcast:
-                    // EMOJI_REACTION_BROADCAST|msgId|reactor|emoji  (không-room, 4 phần)
-                    // EMOJI_REACTION_BROADCAST|roomName|msgId|reactor|emoji  (room, 5 phần)
-                    if (parts.Length >= 5)
-                    {
-                        OnEmojiReaction?.Invoke(parts[2], parts[3], parts[4]);
-                    }
-                    else if (parts.Length >= 4)
-                    {
-                        OnEmojiReaction?.Invoke(parts[1], parts[2], parts[3]);
-                    }
-                    break;
-
-                // ===== Giai đoạn 3: Multi-Room =====
-
-                case PacketTypes.RoomList:
-                    {
-                        var rooms = parts.Skip(1).Where(p => !string.IsNullOrEmpty(p)).ToList();
-                        lock (_knownRoomsLock)
-                        {
-                            _knownRooms.Clear();
-                            _knownRooms.AddRange(rooms);
-                        }
-                        OnRoomListUpdated?.Invoke(rooms);
-                    }
-                    break;
-
-                case PacketTypes.CreateRoomOk:
-                    if (parts.Length >= 2)
-                        OnRoomCreateResult?.Invoke(parts[1], "OK");
-                    break;
-
-                case PacketTypes.RoomCreated:
-                    if (parts.Length >= 2)
-                    {
-                        string newRoom = parts[1];
-                        List<string> snapshot;
-                        lock (_knownRoomsLock)
-                        {
-                            if (!_knownRooms.Contains(newRoom, StringComparer.OrdinalIgnoreCase))
-                                _knownRooms.Add(newRoom);
-                            snapshot = new List<string>(_knownRooms);
-                        }
-                        OnRoomListUpdated?.Invoke(snapshot);
-                    }
-                    break;
-
-                case PacketTypes.JoinRoomOk:
-                    if (parts.Length >= 2)
-                    {
-                        CurrentRoom = parts[1];
-                        OnJoinRoomOk?.Invoke(parts[1]);
-                    }
-                    break;
-
-                case PacketTypes.RoomSystem:
-                    // ROOM_SYSTEM|roomName|message
-                    if (parts.Length >= 3)
-                        OnRoomSystemMessage?.Invoke(parts[1], parts[2]);
-                    break;
-
-                case PacketTypes.RoomUserList:
-                    // ROOM_USER_LIST|roomName|user1|user2|...
-                    if (parts.Length >= 2)
-                    {
-                        string roomName = parts[1];
-                        var usernames = parts.Skip(2).Where(p => !string.IsNullOrEmpty(p)).ToList();
-                        OnRoomUserListUpdated?.Invoke(roomName, usernames);
-                    }
-                    break;
-
-                case PacketTypes.RoomMessage:
-                    // ROOM_MESSAGE|roomName|msgId|sender|content
-                    if (parts.Length >= 5)
-                    {
-                        OnChatMessage?.Invoke(new ChatMessageInfo
-                        {
-                            RoomName = parts[1],
-                            MessageId = parts[2],
-                            Sender = parts[3],
-                            Content = parts[4]
-                        });
-                    }
-                    break;
-
-                case PacketTypes.RoomReplyMessage:
-                    // ROOM_RELY_MESSAGE|roomName|msgId|sender|content|replyToId|replyToSender|replyToPreview
-                    if (parts.Length >= 8)
-                    {
-                        OnChatMessage?.Invoke(new ChatMessageInfo
-                        {
-                            RoomName = parts[1],
-                            MessageId = parts[2],
-                            Sender = parts[3],
-                            Content = parts[4],
-                            IsReply = true,
-                            ReplyToId = parts[5],
-                            ReplyToSender = parts[6],
-                            ReplyToPreview = parts[7]
-                        });
-                    }
-                    break;
+                });
 
                 case PacketTypes.RoomForwardMessage:
                     // ROOM_FORWARD_MESSAGE|roomName|msgId|sender|content|originalSender
@@ -990,6 +929,20 @@ namespace TCPIP_Collaborative_Chat_System.Network
                 handleLine(line);
             }
         }
+        public void Login(string username, string password)
+        {
+            string packet = $"{PacketTypes.Login}|{username}|{password}\n";
+            byte[] buffer = Encoding.UTF8.GetBytes(packet);
+            try
+            {
+                _socket?.Send(buffer);
+            }
+            catch (Exception ex)
+            {
+                OnStatusChanged?.Invoke(
+                    "Gửi login thất bại: " + ex.Message);
+            }
+        }
 
         private static int IndexOfNewline(StringBuilder builder)
         {
@@ -1000,6 +953,42 @@ namespace TCPIP_Collaborative_Chat_System.Network
             }
 
             return -1;
+        }
+        public void CreateRoom(string roomName, int maxUsers, bool isPrivate, string password)
+        {
+            if (!IsConnected)
+                return;
+
+            string packet;
+
+            if (isPrivate)
+            {
+                packet =
+                    $"CREATE_ROOM|{roomName}|{maxUsers}|PRIVATE|{password}\n";
+            }
+            else
+            {
+                packet =
+                    $"CREATE_ROOM|{roomName}|{maxUsers}|PUBLIC\n";
+            }
+
+            _socket.Send(
+                Encoding.UTF8.GetBytes(packet));
+        }
+
+        public void JoinRoom(string roomName, string password = "")
+        {
+            if (!IsConnected)
+                return;
+            string packet = $"JOIN_ROOM|{roomName}|{password}\n";
+            _socket.Send(Encoding.UTF8.GetBytes(packet));
+        }
+
+        public void LeaveRoom(string roomName)
+        {
+            if (!IsConnected) return;
+            string packet = $"LEAVE_ROOM|{roomName}\n";
+            _socket.Send(Encoding.UTF8.GetBytes(packet));
         }
     }
 }

@@ -2,85 +2,68 @@ namespace TCPIP_Collaborative_Chat_System.Forms
 {
     partial class RegisterForm
     {
+        /// <summary>
+        /// Required designer variable.
+        /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        private System.Windows.Forms.Label lblTitle;
-        private System.Windows.Forms.Label lblUsername;
-        private System.Windows.Forms.Label lblPassword;
-        private System.Windows.Forms.Label lblConfirm;
-        private System.Windows.Forms.Label lblEmail;
-
-        private System.Windows.Forms.TextBox txtUsername;
-        private System.Windows.Forms.TextBox txtPassword;
-        private System.Windows.Forms.TextBox txtConfirm;
-        private System.Windows.Forms.TextBox txtEmail;
-
-        private System.Windows.Forms.PictureBox picAvatar;
-
-        private System.Windows.Forms.Button btnChooseAvatar;
-        private System.Windows.Forms.Button btnRemoveAvatar;
-        private System.Windows.Forms.Button btnRegister;
-        private System.Windows.Forms.Button btnBack;
-
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
+            {
                 components.Dispose();
-
+            }
             base.Dispose(disposing);
         }
 
+        #region Windows Form Designer generated code
+
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
         private void InitializeComponent()
         {
-            this.lblTitle = new System.Windows.Forms.Label();
-            this.lblUsername = new System.Windows.Forms.Label();
-            this.lblPassword = new System.Windows.Forms.Label();
-            this.lblConfirm = new System.Windows.Forms.Label();
-            this.lblEmail = new System.Windows.Forms.Label();
-            this.txtUsername = new System.Windows.Forms.TextBox();
+            this.username = new System.Windows.Forms.Label();
+            this.password = new System.Windows.Forms.Label();
+            this.txtUserName = new System.Windows.Forms.TextBox();
             this.txtPassword = new System.Windows.Forms.TextBox();
-            this.txtConfirm = new System.Windows.Forms.TextBox();
-            this.txtEmail = new System.Windows.Forms.TextBox();
-            this.picAvatar = new System.Windows.Forms.PictureBox();
-            this.btnChooseAvatar = new System.Windows.Forms.Button();
-            this.btnRemoveAvatar = new System.Windows.Forms.Button();
+            this.confirmPassword = new System.Windows.Forms.Label();
+            this.txtConfirmPassword = new System.Windows.Forms.TextBox();
             this.btnRegister = new System.Windows.Forms.Button();
             this.btnBack = new System.Windows.Forms.Button();
-            ((System.ComponentModel.ISupportInitialize)(this.picAvatar)).BeginInit();
+            this.register = new System.Windows.Forms.Label();
             this.SuspendLayout();
-            //
-            // lblTitle
-            //
-            this.lblTitle.AutoSize = false;
-            this.lblTitle.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Bold);
-            this.lblTitle.ForeColor = System.Drawing.Color.DodgerBlue;
-            this.lblTitle.Location = new System.Drawing.Point(0, 30);
-            this.lblTitle.Name = "lblTitle";
-            this.lblTitle.Size = new System.Drawing.Size(500, 50);
-            this.lblTitle.TabIndex = 0;
-            this.lblTitle.Text = "ĐĂNG KÝ";
-            this.lblTitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            //
-            // lblUsername
-            //
-            this.lblUsername.AutoSize = true;
-            this.lblUsername.ForeColor = System.Drawing.Color.White;
-            this.lblUsername.Location = new System.Drawing.Point(40, 110);
-            this.lblUsername.Name = "lblUsername";
-            this.lblUsername.Size = new System.Drawing.Size(60, 15);
-            this.lblUsername.TabIndex = 1;
-            this.lblUsername.Text = "Username";
-            //
-            // lblPassword
-            //
-            this.lblPassword.AutoSize = true;
-            this.lblPassword.ForeColor = System.Drawing.Color.White;
-            this.lblPassword.Location = new System.Drawing.Point(40, 170);
-            this.lblPassword.Name = "lblPassword";
-            this.lblPassword.Size = new System.Drawing.Size(57, 15);
-            this.lblPassword.TabIndex = 2;
-            this.lblPassword.Text = "Password";
-            //
+            // 
+            // username
+            // 
+            this.username.AutoSize = true;
+            this.username.Location = new System.Drawing.Point(24, 65);
+            this.username.Name = "username";
+            this.username.Size = new System.Drawing.Size(76, 16);
+            this.username.TabIndex = 0;
+            this.username.Text = "UserName:";
+            // 
+            // password
+            // 
+            this.password.AutoSize = true;
+            this.password.Location = new System.Drawing.Point(24, 101);
+            this.password.Name = "password";
+            this.password.Size = new System.Drawing.Size(70, 16);
+            this.password.TabIndex = 1;
+            this.password.Text = "Password:";
+            // 
+            // txtUserName
+            // 
+            this.txtUserName.Location = new System.Drawing.Point(106, 59);
+            this.txtUserName.Name = "txtUserName";
+            this.txtUserName.Size = new System.Drawing.Size(609, 22);
+            this.txtUserName.TabIndex = 2;
+            // 
             // lblConfirm
             //
             this.lblConfirm.AutoSize = true;
@@ -109,112 +92,91 @@ namespace TCPIP_Collaborative_Chat_System.Forms
             this.txtUsername.TabIndex = 5;
             //
             // txtPassword
-            //
-            this.txtPassword.Location = new System.Drawing.Point(180, 165);
+            // 
+            this.txtPassword.Location = new System.Drawing.Point(106, 95);
             this.txtPassword.Name = "txtPassword";
-            this.txtPassword.PasswordChar = '*';
-            this.txtPassword.Size = new System.Drawing.Size(250, 23);
-            this.txtPassword.TabIndex = 6;
-            //
-            // txtConfirm
-            //
-            this.txtConfirm.Location = new System.Drawing.Point(180, 225);
-            this.txtConfirm.Name = "txtConfirm";
-            this.txtConfirm.PasswordChar = '*';
-            this.txtConfirm.Size = new System.Drawing.Size(250, 23);
-            this.txtConfirm.TabIndex = 7;
-            //
-            // txtEmail
-            //
-            this.txtEmail.Location = new System.Drawing.Point(180, 285);
-            this.txtEmail.Name = "txtEmail";
-            this.txtEmail.Size = new System.Drawing.Size(250, 23);
-            this.txtEmail.TabIndex = 8;
-            //
-            // picAvatar
-            //
-            this.picAvatar.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.picAvatar.Location = new System.Drawing.Point(190, 340);
-            this.picAvatar.Name = "picAvatar";
-            this.picAvatar.Size = new System.Drawing.Size(120, 120);
-            this.picAvatar.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-            this.picAvatar.TabIndex = 9;
-            this.picAvatar.TabStop = false;
-            //
-            // btnChooseAvatar
-            //
-            this.btnChooseAvatar.Location = new System.Drawing.Point(160, 490);
-            this.btnChooseAvatar.Name = "btnChooseAvatar";
-            this.btnChooseAvatar.Size = new System.Drawing.Size(180, 35);
-            this.btnChooseAvatar.TabIndex = 10;
-            this.btnChooseAvatar.Text = "Choose Image";
-            this.btnChooseAvatar.UseVisualStyleBackColor = true;
-            this.btnChooseAvatar.Click += new System.EventHandler(this.btnChooseAvatar_Click);
-            //
-            // btnRemoveAvatar
-            //
-            this.btnRemoveAvatar.Location = new System.Drawing.Point(160, 535);
-            this.btnRemoveAvatar.Name = "btnRemoveAvatar";
-            this.btnRemoveAvatar.Size = new System.Drawing.Size(180, 35);
-            this.btnRemoveAvatar.TabIndex = 11;
-            this.btnRemoveAvatar.Text = "Remove";
-            this.btnRemoveAvatar.UseVisualStyleBackColor = true;
-            this.btnRemoveAvatar.Click += new System.EventHandler(this.btnRemoveAvatar_Click);
-            //
+            this.txtPassword.Size = new System.Drawing.Size(609, 22);
+            this.txtPassword.TabIndex = 3;
+            this.txtPassword.UseSystemPasswordChar = true;
+            // 
+            // confirmPassword
+            // 
+            this.confirmPassword.AutoSize = true;
+            this.confirmPassword.Location = new System.Drawing.Point(24, 142);
+            this.confirmPassword.Name = "confirmPassword";
+            this.confirmPassword.Size = new System.Drawing.Size(118, 16);
+            this.confirmPassword.TabIndex = 4;
+            this.confirmPassword.Text = "Confirm Password:";
+            // 
+            // txtConfirmPassword
+            // 
+            this.txtConfirmPassword.Location = new System.Drawing.Point(149, 136);
+            this.txtConfirmPassword.Name = "txtConfirmPassword";
+            this.txtConfirmPassword.Size = new System.Drawing.Size(566, 22);
+            this.txtConfirmPassword.TabIndex = 5;
+            // 
             // btnRegister
-            //
-            this.btnRegister.BackColor = System.Drawing.Color.RoyalBlue;
-            this.btnRegister.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnRegister.ForeColor = System.Drawing.Color.White;
-            this.btnRegister.Location = new System.Drawing.Point(60, 590);
+            // 
+            this.btnRegister.Location = new System.Drawing.Point(196, 227);
             this.btnRegister.Name = "btnRegister";
-            this.btnRegister.Size = new System.Drawing.Size(150, 40);
-            this.btnRegister.TabIndex = 12;
-            this.btnRegister.Text = "REGISTER";
-            this.btnRegister.UseVisualStyleBackColor = false;
+            this.btnRegister.Size = new System.Drawing.Size(124, 47);
+            this.btnRegister.TabIndex = 6;
+            this.btnRegister.Text = "Register";
+            this.btnRegister.UseVisualStyleBackColor = true;
             this.btnRegister.Click += new System.EventHandler(this.btnRegister_Click);
-            //
+            // 
             // btnBack
-            //
-            this.btnBack.BackColor = System.Drawing.Color.DimGray;
-            this.btnBack.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnBack.ForeColor = System.Drawing.Color.White;
-            this.btnBack.Location = new System.Drawing.Point(280, 590);
+            // 
+            this.btnBack.Location = new System.Drawing.Point(442, 227);
             this.btnBack.Name = "btnBack";
-            this.btnBack.Size = new System.Drawing.Size(150, 40);
-            this.btnBack.TabIndex = 13;
-            this.btnBack.Text = "BACK";
-            this.btnBack.UseVisualStyleBackColor = false;
+            this.btnBack.Size = new System.Drawing.Size(126, 47);
+            this.btnBack.TabIndex = 7;
+            this.btnBack.Text = "Back";
+            this.btnBack.UseVisualStyleBackColor = true;
             this.btnBack.Click += new System.EventHandler(this.btnBack_Click);
-            //
+            // 
+            // register
+            // 
+            this.register.AutoSize = true;
+            this.register.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
+            this.register.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.register.Location = new System.Drawing.Point(339, 0);
+            this.register.Name = "register";
+            this.register.Size = new System.Drawing.Size(80, 20);
+            this.register.TabIndex = 8;
+            this.register.Text = "Register";
+            // 
             // RegisterForm
-            //
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(15, 23, 42);
-            this.ClientSize = new System.Drawing.Size(500, 650);
-            this.Controls.Add(this.lblTitle);
-            this.Controls.Add(this.lblUsername);
-            this.Controls.Add(this.lblPassword);
-            this.Controls.Add(this.lblConfirm);
-            this.Controls.Add(this.lblEmail);
-            this.Controls.Add(this.txtUsername);
-            this.Controls.Add(this.txtPassword);
-            this.Controls.Add(this.txtConfirm);
-            this.Controls.Add(this.txtEmail);
-            this.Controls.Add(this.picAvatar);
-            this.Controls.Add(this.btnChooseAvatar);
-            this.Controls.Add(this.btnRemoveAvatar);
-            this.Controls.Add(this.btnRegister);
+            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.register);
             this.Controls.Add(this.btnBack);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.MaximizeBox = false;
+            this.Controls.Add(this.btnRegister);
+            this.Controls.Add(this.txtConfirmPassword);
+            this.Controls.Add(this.confirmPassword);
+            this.Controls.Add(this.txtPassword);
+            this.Controls.Add(this.txtUserName);
+            this.Controls.Add(this.password);
+            this.Controls.Add(this.username);
             this.Name = "RegisterForm";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Register";
-            ((System.ComponentModel.ISupportInitialize)(this.picAvatar)).EndInit();
+            this.Text = "RegisterForm";
             this.ResumeLayout(false);
             this.PerformLayout();
+
         }
+
+        #endregion
+
+        private System.Windows.Forms.Label username;
+        private System.Windows.Forms.Label password;
+        private System.Windows.Forms.TextBox txtUserName;
+        private System.Windows.Forms.TextBox txtPassword;
+        private System.Windows.Forms.Label confirmPassword;
+        private System.Windows.Forms.TextBox txtConfirmPassword;
+        private System.Windows.Forms.Button btnRegister;
+        private System.Windows.Forms.Button btnBack;
+        private System.Windows.Forms.Label register;
     }
 }

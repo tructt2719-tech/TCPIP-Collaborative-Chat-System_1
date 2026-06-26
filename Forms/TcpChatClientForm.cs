@@ -1,44 +1,46 @@
 using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
 using System.Net;
 using System.Windows.Forms;
+using TCPIP_Collaborative_Chat_System.Client;
+using TCPIP_Collaborative_Chat_System.Forms;
+using TCPIP_Collaborative_Chat_System.Models;
 using TCPIP_Collaborative_Chat_System.Network;
 
 namespace TCPIP_Collaborative_Chat_System
 {
     public partial class TcpChatClientForm : Form
     {
-        private readonly ChatClientManager _client = new ChatClientManager();
-
-        private string _password = string.Empty;
-        private string _aesKey = string.Empty;
-        private bool _autoConnect;
-        private bool _autoConnectTriggered;
-
-        // Message hiện đang được chọn để Reply / Forward (qua right-click hoặc double-click dòng chat)
-        private ChatMessageInfo _selectedMessage;
-        private ChatMessageInfo _pendingReply;
-
-        // Lưu lại từng dòng chat đã hiển thị, map theo vị trí ký tự trong RichTextBox để xác định
-        // người dùng đang right-click/double-click vào message nào.
-        private readonly List<ChatLineEntry> _chatLines = new List<ChatLineEntry>();
-
-        private class ChatLineEntry
-        {
-            public int StartIndex;
-            public int Length;
-            public ChatMessageInfo Message;
-        }
-
-        public TcpChatClientForm()
+        private string _currentRoom = "";
+        private readonly string _username;
+        private readonly string _password;
+        private readonly bool _remember;
+        public TcpChatClientForm(string username, string password, bool remember)
         {
             InitializeComponent();
+            _username = username;
+            _password = password;
+            _remember = remember;
+            txtUsername.Text = username;
+            txtUsername.Enabled = false;
             WireClientEvents();
-            WireChatContextMenu();
-            lstRooms.DoubleClick += lstRooms_DoubleClick;
-            SetChatControlsEnabled(false);
+            LoadConnectionSettings();
+        }
+        private void LoadConnectionSettings()
+        {
+            numServerPort.Value = 12345;
+            if (!SettingsManager.Exists())
+                return;
+            string ip = SettingsManager.Read("ServerIP");
+            if (!string.IsNullOrWhiteSpace(ip))
+            {
+                txtServerIP.Text = ip;
+            }
+            string port = SettingsManager.Read("Port");
+            int p;
+            if (int.TryParse(port, out p))
+            {
+                numServerPort.Value = p;
+            }
         }
 
         public void SetLoginInfo(
@@ -63,10 +65,7 @@ namespace TCPIP_Collaborative_Chat_System
 
             if (_autoConnect && !_autoConnectTriggered)
             {
-                _autoConnectTriggered = true;
-                ConnectInternal();
-            }
-        }
+                MessageBox.Show("Client đã kết nối rồi!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
         private void btnConnect_Click(object sender, EventArgs e)
         {
@@ -76,49 +75,31 @@ namespace TCPIP_Collaborative_Chat_System
         private void ConnectInternal()
         {
             try
-            {
-                if (_client.IsConnected)
+            {         
+                if (string.IsNullOrWhiteSpace(txtServerIP.Text))
                 {
-                    MessageBox.Show("Đã kết nối rồi!", "Thông báo");
+                    MessageBox.Show("Vui lòng nhập địa chỉ IP Server.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txtServerIP.Focus();
+
                     return;
                 }
 
-                string username = txtUsername.Text.Trim();
-                if (string.IsNullOrWhiteSpace(username))
+                IPAddress ip;
+
+                if (!IPAddress.TryParse(txtServerIP.Text.Trim(), out ip))
                 {
-                    MessageBox.Show("Nhập Username!", "Lỗi");
+                    MessageBox.Show("Địa chỉ IP không hợp lệ.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txtServerIP.Focus();
+
                     return;
                 }
 
-                if (!IPAddress.TryParse(txtServerIP.Text.Trim(), out _))
-                {
-                    MessageBox.Show("IP Address không hợp lệ", "Lỗi");
-                    return;
-                }
-
-                if (string.IsNullOrWhiteSpace(_password))
-                {
-                    MessageBox.Show(
-                        "Thiếu mật khẩu. Vui lòng đăng nhập lại từ LoginForm.",
-                        "Lỗi",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Warning);
-                    return;
-                }
-
-                SetConnectionInputsEnabled(false);
-                SetChatControlsEnabled(false);
-                lblStatus.Text = "Đang kết nối...";
-
-                _client.Connect(
-                    txtServerIP.Text.Trim(),
-                    (int)numServerPort.Value);
+                _client.Connect(txtServerIP.Text.Trim(), (int)numServerPort.Value);
             }
             catch (Exception ex)
             {
-                SetConnectionInputsEnabled(true);
-                lblStatus.Text = "Kết nối thất bại";
-                MessageBox.Show(ex.Message, "Lỗi kết nối");
+                btnConnect.Enabled = true;
+                MessageBox.Show("Lỗi kết nối: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -136,88 +117,30 @@ namespace TCPIP_Collaborative_Chat_System
                     }
                 });
 
-            _client.OnLoginResult += result =>
-                SafeInvoke(() =>
+                if (message.StartsWith("Kết nối thất bại"))
                 {
-                    if (result.StartsWith("OK:"))
+                    btnConnect.Enabled = true;
+                }
+                if (message == "Kết nối thành công.")
+                {
+                    if (_remember)
                     {
-                        lblStatus.Text = "Đăng nhập thành công";
-                        SetConnectionInputsEnabled(false);
-                        SetChatControlsEnabled(true);
-                        _client.GetRooms();
+                        SettingsManager.Save(_username, true, txtServerIP.Text.Trim(), (int)numServerPort.Value);
                     }
-                    else if (result.StartsWith("FAIL:"))
+                    else
                     {
-                        string reason = result.Length > 5
-                            ? result.Substring(5)
-                            : "Đăng nhập thất bại";
-
-                        SetChatControlsEnabled(false);
-
-                        MessageBox.Show(
-                            reason,
-                            "Đăng nhập thất bại",
-                            MessageBoxButtons.OK,
-                            MessageBoxIcon.Warning);
-
-                        _client.Disconnect();
-
-                        btnConnect.Enabled = true;
-                        lblStatus.Text = "Disconnected";
-                        SetConnectionInputsEnabled(true);
+                        SettingsManager.Delete();
                     }
-                });
+                    _client.Login(_username, _password);
+                }
+            });
 
-            _client.OnChatMessage += info =>
-                SafeInvoke(() =>
-                {
-                    // Message không-theo-room (2.5, RoomName rỗng) luôn hiển thị.
-                    // Message theo-room (Giai đoạn 3) chỉ hiển thị nếu đúng room đang xem,
-                    // tránh nhiễu nội dung giữa các phòng khác nhau.
-                    if (string.IsNullOrEmpty(info.RoomName) ||
-                        info.RoomName.Equals(_client.CurrentRoom, StringComparison.OrdinalIgnoreCase))
-                    {
-                        AppendChatMessage(info);
-                    }
-                });
-
-            _client.OnSystemMessage += msg =>
-                SafeInvoke(() =>
-                {
-                    AppendPlainLine("[System] " + msg);
-                });
-
-            _client.OnEmojiReaction += (messageId, reactor, emoji) =>
-                SafeInvoke(() =>
-                {
-                    AppendPlainLine($"[Reaction] {reactor} đã react {emoji} vào tin nhắn {ShortId(messageId)}");
-                });
-
-            _client.OnDisconnected += () =>
-                SafeInvoke(() =>
-                {
-                    lblStatus.Text = "Disconnected";
-                    SetConnectionInputsEnabled(true);
-                    SetChatControlsEnabled(false);
-                });
-
-            _client.OnUserListUpdated += users =>
-                SafeInvoke(() => RenderUserList(users));
-
-            // ===== Giai đoạn 3: Multi-Room =====
-
-            _client.OnRoomListUpdated += rooms =>
-                SafeInvoke(() => RenderRoomList(rooms));
-
-            _client.OnJoinRoomOk += roomName =>
-                SafeInvoke(() =>
-                {
-                    lblCurrentRoom.Text = $"Phòng: {roomName}";
-                    HighlightCurrentRoomInList(roomName);
-                    txtChatContent.Clear();
-                    _chatLines.Clear();
-                    AppendPlainLine($"--- Đã vào phòng '{roomName}' ---");
-                });
+            _client.OnMessageReceived += message => SafeInvoke(() => UpdateChatContent(message));
+            _client.OnDisconnected += () => SafeInvoke(() =>
+            {
+                UpdateStatus("Đã ngắt kết nối với Server.");
+                btnConnect.Enabled = true;
+            });
 
             _client.OnRoomSystemMessage += (roomName, message) =>
                 SafeInvoke(() =>
@@ -428,13 +351,44 @@ namespace TCPIP_Collaborative_Chat_System
 
         // ===== Chọn message bằng double-click / right-click trên RichTextBox =====
 
-        private void WireChatContextMenu()
-        {
-            txtChatContent.MouseDown += TxtChatContent_MouseDown;
-            txtChatContent.MouseDoubleClick += TxtChatContent_MouseDoubleClick;
-        }
+            _client.OnUserListUpdated += users => SafeInvoke(() =>
+                UpdateStatus("Online: " + string.Join(", ", users)));
 
-        private void TxtChatContent_MouseDoubleClick(object sender, MouseEventArgs e)
+            _client.OnRoomMessage += msg => SafeInvoke(() =>
+                UpdateChatContent(msg));
+
+            _client.OnRoomHistory += msg => SafeInvoke(() =>
+                UpdateChatContent(msg));
+
+            _client.OnRoomUserJoined += msg => SafeInvoke(() =>
+                UpdateChatContent("[ROOM] " + msg));
+
+            _client.OnRoomUserLeft += msg =>SafeInvoke(() =>
+                UpdateChatContent("[ROOM] " + msg));
+
+            _client.OnRoomListReceived += rooms =>
+            {
+                SafeInvoke(() =>
+                {
+                    lstRooms.Items.Clear();
+
+                    foreach (var roomInfo in rooms)
+                    {
+                        string[] data = roomInfo.Split(',');
+                        string roomName =  data[0];
+                        bool isPrivate = data.Length > 1 && data[1] == "PRIVATE";
+                        lstRooms.Items.Add(
+                            new RoomItem
+                            {
+                                Name = roomName,
+                                IsPrivate = isPrivate
+                            });
+                    }
+                });
+            };
+
+        }
+        private void SafeInvoke(Action action)
         {
             var entry = FindLineAt(txtChatContent.GetCharIndexFromPosition(e.Location));
             if (entry == null) return;
@@ -553,51 +507,9 @@ namespace TCPIP_Collaborative_Chat_System
             txtChatContent.SelectionStart = txtChatContent.TextLength;
             txtChatContent.ScrollToCaret();
         }
-
-        // ===== Online User Panel với avatar nhỏ cạnh từng username =====
-
-        private void RenderUserList(List<OnlineUserInfo> users)
+        private void UpdateStatus(string s)
         {
-            pnlUsers.SuspendLayout();
-            pnlUsers.Controls.Clear();
-
-            int y = 4;
-            foreach (var user in users)
-            {
-                var row = new Panel
-                {
-                    Location = new Point(4, y),
-                    Size = new Size(pnlUsers.Width - 12, 36),
-                    BackColor = Color.Transparent
-                };
-
-                var pic = new PictureBox
-                {
-                    Size = new Size(28, 28),
-                    Location = new Point(0, 4),
-                    SizeMode = PictureBoxSizeMode.Zoom,
-                    BorderStyle = BorderStyle.FixedSingle
-                };
-
-                Image avatarImg = TryDecodeAvatar(user.AvatarBase64);
-                pic.Image = avatarImg; // null nếu không có avatar -> ô trống, không crash
-
-                var lbl = new Label
-                {
-                    Text = user.Username,
-                    Location = new Point(36, 8),
-                    AutoSize = true,
-                    Font = new Font("Segoe UI", 9.5F)
-                };
-
-                row.Controls.Add(pic);
-                row.Controls.Add(lbl);
-                pnlUsers.Controls.Add(row);
-
-                y += 40;
-            }
-
-            pnlUsers.ResumeLayout();
+            lblStatus.Text = s;
         }
 
         // ===== Giai đoạn 3: Room Panel =====
@@ -639,38 +551,23 @@ namespace TCPIP_Collaborative_Chat_System
                     return;
                 }
 
-                _client.JoinRoom(roomName);
-            }
-        }
-
-        private void btnCreateRoom_Click(object sender, EventArgs e)
-        {
-            if (!_client.IsConnected || !_client.IsLoggedIn)
+            try
             {
-                MessageBox.Show("Chưa kết nối hoặc chưa đăng nhập.");
-                return;
+                if (!_client.IsLoggedIn)
+                {
+                    MessageBox.Show("Chưa đăng nhập xong!");
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(_currentRoom))
+                {
+                    MessageBox.Show("Bạn chưa tham gia phòng nào");
+                    return;
+                }
+                _client.SendRoomMessage(_currentRoom, txtMessage.Text.Trim());
+                txtMessage.Clear();
             }
-
-            string roomName = PromptForRoomName();
-            if (string.IsNullOrWhiteSpace(roomName))
-                return;
-
-            _client.CreateRoom(roomName.Trim());
-        }
-
-        /// <summary>Hộp thoại nhập tên room tự viết (tránh phụ thuộc Microsoft.VisualBasic.Interaction).</summary>
-        private static string PromptForRoomName()
-        {
-            using (var form = new Form
-            {
-                Width = 360,
-                Height = 150,
-                Text = "Tạo phòng chat",
-                StartPosition = FormStartPosition.CenterParent,
-                FormBorderStyle = FormBorderStyle.FixedDialog,
-                MaximizeBox = false,
-                MinimizeBox = false
-            })
+            catch (Exception ex)
             {
                 var label = new Label { Left = 16, Top = 16, Width = 320, Text = "Tên phòng mới:" };
                 var textBox = new TextBox { Left = 16, Top = 40, Width = 310 };
@@ -723,18 +620,64 @@ namespace TCPIP_Collaborative_Chat_System
 
         private void SafeInvoke(Action action)
         {
-            if (IsDisposed) return;
 
-            if (InvokeRequired)
-                Invoke(action);
-            else
-                action();
         }
 
-        protected override void OnFormClosed(FormClosedEventArgs e)
+        private void textBox1_TextChanged(object sender, EventArgs e)
         {
-            _client.Disconnect();
-            base.OnFormClosed(e);
+
+        }
+
+        private void btnCreateRoom_Click(object sender, EventArgs e)
+        {
+            CreateRoomForm frm = new CreateRoomForm();
+            if (frm.ShowDialog() == DialogResult.OK)
+            {
+                _client.CreateRoom(frm.RoomName, frm.MaxUsers, frm.IsPrivate, frm.Password);
+            }
+        }
+
+        private void btnJoinRoom_Click(object sender, EventArgs e)
+        {
+            if (lstRooms.SelectedItem == null)
+            {
+                MessageBox.Show("Chọn phòng trước");
+                return;
+            }
+            RoomItem room = (RoomItem)lstRooms.SelectedItem;
+            string roomName = room.Name;
+            string password = "";
+
+            if (room.IsPrivate)
+            {
+                password = txtRoomName.Text.Trim();
+
+                if (string.IsNullOrWhiteSpace(password))
+                {
+                    MessageBox.Show("Vui lòng nhập mật khẩu");
+                    return;
+                }
+            }
+            txtChatContent.Clear();
+            _client.JoinRoom(roomName, password);
+            _currentRoom = room.Name;
+        }
+
+        private void btnLeaveRoom_Click(object sender, EventArgs e)
+        {
+            if (lstRooms.SelectedItem == null)
+            {
+                MessageBox.Show("Vui lòng chọn phòng", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            RoomItem room = (RoomItem)lstRooms.SelectedItem;
+
+            if (MessageBox.Show($"Bạn có chắc muốn rời phòng '{room.Name}' ?", "Xác nhận rời phòng", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                _client.LeaveRoom(room.Name);
+                _currentRoom = "";
+            }
         }
     }
 }

@@ -1,195 +1,158 @@
 using System;
-using System.Net;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
-using TCPIP_Collaborative_Chat_System.Network;
-using TCPIP_Collaborative_Chat_System.Properties;
+using TCPIP_Collaborative_Chat_System.Models;
+using TCPIP_Collaborative_Chat_System.Database;
+using TCPIP_Collaborative_Chat_System.Client;
 
 namespace TCPIP_Collaborative_Chat_System.Forms
 {
     public partial class LoginForm : Form
     {
-        private TcpChatClientForm _clientForm;
-
-        public LoginForm()
+        private readonly AppMode _mode;
+        public LoginForm(AppMode mode)
         {
             InitializeComponent();
-            LoadSavedSettings();
+            _mode = mode;
+            AcceptButton = btnLogin;
+            ConfigureLoginMode();
         }
-
-        private void LoadSavedSettings()
+        private void ConfigureLoginMode()
         {
-            var settings = Settings.Default;
-
-            if (!settings.RememberMe)
-                return;
-
-            chkRemember.Checked = true;
-            txtUsername.Text = settings.SavedUsername ?? string.Empty;
-            txtIP.Text = string.IsNullOrWhiteSpace(settings.SavedServerIp)
-                ? "127.0.0.1"
-                : settings.SavedServerIp;
-
-            if (settings.SavedServerPort >= 1 && settings.SavedServerPort <= 65535)
-                numPort.Value = settings.SavedServerPort;
-
-            txtKey.Text = settings.SavedAesKey ?? string.Empty;
-        }
-
-        private void btnLogin_Click(object sender, EventArgs e)
-        {
-            if (!ValidateInputs(out string error))
+            bool isClient = _mode == AppMode.Client;
+            lblMode.Text = isClient ? "Client Login" : "Administrator Login";
+            chkRemember.Visible = isClient;
+            btnRegister.Visible = true;
+            if (isClient)
             {
-                MessageBox.Show(
-                    error,
-                    "Lỗi đăng nhập",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-                return;
+                LoadRememberUser();
+                LoadSettings();
+                LoadRemember();
             }
-
-            SetLoginButtonsEnabled(false);
-
-            try
+            else
             {
-                var client = new ChatClientManager();
+                txtUsername.Clear();
+                txtPassword.Clear();
+                txtUsername.Focus();
+            }
+        }
+        private void LoadRemember()
+        {
+            if (!SettingsManager.Exists())
+                return;
+            bool remember = SettingsManager.Read("Remember") == "True";
+            chkRemember.Checked = remember;
+            if (!remember)
+                return;
+            txtUsername.Text = SettingsManager.Read("Username");
 
-                bool success = client.TryLogin(
-                    txtIP.Text.Trim(),
-                    (int)numPort.Value,
-                    txtUsername.Text.Trim(),
-                    txtPassword.Text,
-                    out string loginError);
-
-                if (!success)
-                {
-                    MessageBox.Show(
-                        loginError ?? "Đăng nhập thất bại",
-                        "Lỗi đăng nhập",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Warning);
-                    return;
+        }
+        private void LoadSettings()
+        {
+            if (!SettingsManager.Exists())
+                return;
                 }
 
-                SaveRememberSettings();
+            chkRemember.Checked = SettingsManager.Read("Remember") == "True";
 
-                _clientForm = new TcpChatClientForm();
-                _clientForm.SetLoginInfo(
-                    txtUsername.Text.Trim(),
-                    txtPassword.Text,
-                    txtIP.Text.Trim(),
-                    (int)numPort.Value,
-                    txtKey.Text.Trim(),
-                    autoConnect: true);
+            txtUsername.Text = SettingsManager.Read("Username");
+        }
+        private void LoadRememberUser()
+        {
+            string username = UserRepository.GetRememberUser();
 
-                _clientForm.FormClosed += ClientForm_FormClosed;
-                _clientForm.Show();
-                Hide();
+            if (!string.IsNullOrWhiteSpace(username))
+            {
+                txtUsername.Text = username;
+                chkRemember.Checked = true;
+                txtPassword.Focus();
             }
-            catch (Exception ex)
+        }
+        private void Login()
+        {
+            string username = txtUsername.Text.Trim();
+            string password = txtPassword.Text;
+            string hash = PasswordHasher.Hash(password);
+
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                MessageBox.Show("Vui lòng nhập Username", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                txtUsername.Focus();
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                MessageBox.Show("Vui lòng nhập Password", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                txtPassword.Focus();
+                return;
+            }
+            // Kiểm tra tài khoản có tồn tại không
+            if (!UserRepository.UserExists(username))
             {
                 MessageBox.Show(
-                    ex.Message,
-                    "Lỗi đăng nhập",
+                    "Bạn chưa có tài khoản.\nVui lòng đăng ký.",
+                    "Thông báo",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+
+                return;
+            }
+
+            // Kiểm tra mật khẩu
+            if (!UserRepository.ValidateLogin(username, hash))
+            {
+                MessageBox.Show(
+                    "Sai Username hoặc Password",
+                    "Đăng nhập",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
+
+                txtPassword.Clear();
+                txtPassword.Focus();
+                return;
             }
-            finally
+            //Remember chỉ Client mới cần vì admin cần bảo mật cao
+            if (_mode == AppMode.Client)
             {
-                SetLoginButtonsEnabled(true);
+                UserRepository.ClearRememberUsers();
+                UserRepository.UpdateRememberMe(username, chkRemember.Checked);
             }
-        }
 
-        private void SetLoginButtonsEnabled(bool enabled)
-        {
-            btnLogin.Enabled = enabled;
-            btnRegister.Enabled = enabled;
-            UseWaitCursor = !enabled;
-        }
+            // Client
+            if (_mode == AppMode.Client)
+            {
+                TcpChatClientForm client = new TcpChatClientForm(username, password, chkRemember.Checked);
+                client.Show();
+                Hide();
+                return;
+            }
 
-        private void ClientForm_FormClosed(object sender, FormClosedEventArgs e)
+            // Server
+            TcpChatServerForm server = new TcpChatServerForm();
+            server.Show();
+            Hide();
+        }
+        private void btnLogin_Click(object sender, EventArgs e)
         {
-            _clientForm.FormClosed -= ClientForm_FormClosed;
-            _clientForm = null;
-            Show();
+            Login();
         }
 
         private void btnRegister_Click(object sender, EventArgs e)
         {
-            if (!ValidateServerEndpoint(out string error))
+            RegisterForm frm = new RegisterForm();
+
+            if (frm.ShowDialog() == DialogResult.OK)
             {
-                MessageBox.Show(
-                    error,
-                    "Lỗi kết nối",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-                return;
-            }
-
-            using (var registerForm = new RegisterForm(
-                txtIP.Text.Trim(),
-                (int)numPort.Value))
-            {
-                registerForm.ShowDialog(this);
-            }
-        }
-
-        private bool ValidateInputs(out string error)
-        {
-            if (!ValidateUsername(txtUsername.Text, out error))
-                return false;
-
-            if (string.IsNullOrWhiteSpace(txtPassword.Text))
-            {
-                error = "Password không được rỗng";
-                return false;
-            }
-
-            return ValidateServerEndpoint(out error);
-        }
-
-        private bool ValidateServerEndpoint(out string error)
-        {
-            error = null;
-
-            if (!IPAddress.TryParse(txtIP.Text.Trim(), out _))
-            {
-                error = "IP Address không hợp lệ";
-                return false;
-            }
-
-            int port = (int)numPort.Value;
-            if (port < 1 || port > 65535)
-            {
-                error = "Port phải từ 1 đến 65535";
-                return false;
-            }
-
-            return true;
-        }
-
-        private static bool ValidateUsername(string username, out string error)
-        {
-            return UserStore.ValidateUsername(username, out error);
-        }
-
-        private void SaveRememberSettings()
-        {
-            var settings = Settings.Default;
-            settings.RememberMe = chkRemember.Checked;
-
-            if (chkRemember.Checked)
-            {
-                settings.SavedUsername = txtUsername.Text.Trim();
-                settings.SavedServerIp = txtIP.Text.Trim();
-                settings.SavedServerPort = (int)numPort.Value;
-                settings.SavedAesKey = txtKey.Text.Trim();
-            }
-            else
-            {
-                settings.SavedUsername = string.Empty;
-                settings.SavedServerIp = "127.0.0.1";
-                settings.SavedServerPort = 9000;
-                settings.SavedAesKey = string.Empty;
+                txtUsername.Text = frm.RegisteredUsername;
+                txtPassword.Clear();
+                txtPassword.Focus();
             }
 
             settings.Save();

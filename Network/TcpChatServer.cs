@@ -6,38 +6,87 @@ using System.Net.Sockets;
 using System.Text;
 using TCPIP_Collaborative_Chat_System.Models;
 using TCPIP_Collaborative_Chat_System.Shared;
+using TCPIP_Collaborative_Chat_System.Models;
+using TCPIP_Collaborative_Chat_System.Database;
 
 namespace TCPIP_Collaborative_Chat_System.Network
 {
     public class TcpChatServer
     {
+        public TcpChatServer()
+        {
+           
+        }
+
+        // Events to notify UI - no direct UI dependency
         public event Action<string> OnStatusChanged;
         public event Action<string> OnMessageReceived;
         public event Action<string> OnClientConnected;
         public event Action<string> OnClientDisconnected;
         public event Action<string> OnUserListChanged;
 
-        private static readonly UserStore SharedUserStore = new UserStore();
-        private readonly MessageHistoryStore _history = new MessageHistoryStore();
-        private readonly RoomManager _rooms = new RoomManager();
-
         private Socket _serverSocket;
         private readonly List<ClientHandler> _clients = new List<ClientHandler>();
-
+        private readonly List<ChatRoom> _rooms = new List<ChatRoom>();
+        private readonly RoomRepository _roomRepo = new RoomRepository();
+       
+        private const int MAX_ROOMS = 20;
         public void Start(int port)
         {
-            try
+            _serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            _serverSocket.Bind(new IPEndPoint(IPAddress.Any, port));
+            _serverSocket.Listen(10);
+            if (!_roomRepo.RoomExists("Study"))
             {
-                _serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                _serverSocket.Bind(new IPEndPoint(IPAddress.Any, port));
-                _serverSocket.Listen(10);
-                _serverSocket.BeginAccept(HandleConnection, null);
-                OnStatusChanged?.Invoke($"Server chạy ở port {port}");
+                _roomRepo.AddRoom(
+                    new ChatRoom
+                    {
+                        RoomName = "Study",
+                        Owner = "SYSTEM",
+                        MaxUsers = 10,
+                        IsPrivate = false
+                    });
+
+                _roomRepo.AddRoom(
+                    new ChatRoom
+                    {
+                        RoomName = "Music",
+                        Owner = "SYSTEM",
+                        MaxUsers = 10,
+                        IsPrivate = false
+                    });
+
+                _roomRepo.AddRoom(
+                    new ChatRoom
+                    {
+                        RoomName = "Team",
+                        Owner = "SYSTEM",
+                        MaxUsers = 10,
+                        IsPrivate = false
+                    });
+
+                _roomRepo.AddRoom(
+                    new ChatRoom
+                    {
+                        RoomName = "Gaming",
+                        Owner = "SYSTEM",
+                        MaxUsers = 10,
+                        IsPrivate = false
+                    });
+
+                _roomRepo.AddRoom(
+                    new ChatRoom
+                    {
+                        RoomName = "Work",
+                        Owner = "SYSTEM",
+                        MaxUsers = 10,
+                        IsPrivate = false
+                    });
             }
-            catch (Exception ex)
-            {
-                OnStatusChanged?.Invoke("Lỗi server: " + ex.Message);
-            }
+            _rooms.Clear();
+            _rooms.AddRange(_roomRepo.GetAllRooms());
+            _serverSocket.BeginAccept(HandleConnection, null);
+            OnStatusChanged?.Invoke("Đang chờ kết nối...");
         }
 
         public void Stop()
@@ -135,149 +184,110 @@ namespace TCPIP_Collaborative_Chat_System.Network
             string[] parts = PacketParser.Parse(line);
             if (parts.Length == 0) return;
 
-            string command = parts[0];
+                    string command = parts[0];
+                    if (command == PacketTypes.CreateRoom && parts.Length >= 4)
+                    {
+                        string roomName = parts[1];
 
-            switch (command)
-            {
-                case PacketTypes.Register:
-                    HandleRegister(handler, parts);
-                    return;
+                        int maxUsers =
+                            int.Parse(parts[2]);
 
-                case PacketTypes.Login:
-                    HandleLogin(handler, parts);
-                    return;
+                        bool isPrivate =
+                            parts[3] == "PRIVATE";
 
-                case PacketTypes.Message:
-                    HandleChatMessage(handler, parts);
-                    return;
+                        string password = "";
 
-                case PacketTypes.ReplyMessage:
-                    HandleReplyMessage(handler, parts);
-                    return;
+                        if (isPrivate &&
+                            parts.Length >= 5)
+                        {
+                            password = parts[4];
+                        }
 
-                case PacketTypes.ForwardMessage:
-                    HandleForwardMessage(handler, parts);
-                    return;
+                        HandleCreateRoom(
+                            handler,
+                            roomName,
+                            maxUsers,
+                            isPrivate,
+                            password);
 
-                case PacketTypes.EmojiReaction:
-                    HandleEmojiReaction(handler, parts);
-                    return;
+                        return;
+                    }
+                    if (command == PacketTypes.JoinRoom && parts.Length >= 2)
+                    {
+                        string roomName = parts[1];
 
-                // ===== Giai đoạn 3: Multi-Room =====
-                case PacketTypes.CreateRoom:
-                    HandleCreateRoom(handler, parts);
-                    return;
+                        string password = "";
 
-                case PacketTypes.JoinRoom:
-                    HandleJoinRoom(handler, parts);
-                    return;
+                        if (parts.Length > 2)
+                        {
+                            password = parts[2];
+                        }
 
-                case PacketTypes.LeaveRoom:
-                    HandleLeaveRoom(handler, parts);
-                    return;
+                        HandleJoinRoom(
+                            handler,
+                            roomName,
+                            password);
 
-                case PacketTypes.GetRooms:
-                    HandleGetRooms(handler);
-                    return;
+                        return;
+                    }
+                    if (command == PacketTypes.LeaveRoom && parts.Length >= 2)
+                    {
+                        HandleLeaveRoom(
+                            handler,
+                            parts[1]);
 
-                case PacketTypes.RoomMessage:
-                    HandleRoomMessage(handler, parts);
-                    return;
+                        return;
+                    }
+                    if (command == PacketTypes.RoomMsg && parts.Length >= 3)
+                    {
+                        HandleRoomMessage(
+                            handler,
+                            parts[1],
+                            parts[2]);
 
-                case PacketTypes.RoomReplyMessage:
-                    HandleRoomReplyMessage(handler, parts);
-                    return;
+                        return;
+                    }
+                    if (command == PacketTypes.GetRooms)
+                    {
+                        HandleGetRooms(handler);
+                        return;
+                    }
 
-                case PacketTypes.RoomForwardMessage:
-                    HandleRoomForwardMessage(handler, parts);
-                    return;
-            }
-        }
+                    // REGISTER|username|password
+                    if (command == PacketTypes.Register && parts.Length >= 3)
+                    {
+                        string username = parts[1].Trim();
+                        string password = parts[2];
 
-        // ===== 2.5 Định tuyến tin nhắn người dùng: gắn MessageId + Sender, lưu history để Reply/Forward tra cứu =====
-        // MESSAGE|content   (client gửi - chưa có id, server tự sinh)
-        // hoặc MESSAGE|msgId|content  (nếu client tự sinh id trước)
-        private void HandleChatMessage(ClientHandler handler, string[] parts)
-        {
-            if (!RequireLoggedIn(handler)) return;
-            if (parts.Length < 2) return;
+                        if (string.IsNullOrWhiteSpace(username))
+                        {
+                            SendTo(handler,
+                                PacketBuilder.BuildRegisterFail("Username không được rỗng"));
+                            return;
+                        }
 
-            string content;
-            string clientMsgId = null;
+                        if (UserRepository.UserExists(username))
+                        {
+                            SendTo(handler,
+                                PacketBuilder.BuildRegisterFail("Username đã tồn tại"));
+                            return;
+                        }
 
-            if (parts.Length >= 3)
-            {
-                // MESSAGE|msgId|content  (client đã có id sẵn)
-                clientMsgId = parts[1];
-                content = parts[2];
-            }
-            else
-            {
-                // MESSAGE|content
-                content = parts[1];
-            }
+                        UserRepository.AddUser(username, password);
 
-            handler.Status = "Online";
+                        SendTo(handler,
+                            PacketBuilder.BuildRegisterOk(username));
 
-            var model = new MessageModel(handler.Username, content);
-            if (!string.IsNullOrWhiteSpace(clientMsgId))
-                model.MessageId = clientMsgId;
+                        OnStatusChanged?.Invoke($"Đăng ký thành công: {username}");
 
-            _history.Add(model);
+                        return;
+                    }
 
-            string safePacket = PacketBuilder.BuildMessage(model.MessageId, handler.Username, content);
-            string display = handler.Username + ": " + content;
-            OnMessageReceived?.Invoke(display);
-            BroadcastToLoggedIn(safePacket);
-        }
-
-        // RELY_MESSAGE|msgId|sender|content|replyToId|replyToSender|replyToPreview
-        // Client chỉ cần gửi: RELY_MESSAGE|msgId|sender|content|replyToId  (replyToSender/preview server tự tra)
-        private void HandleReplyMessage(ClientHandler handler, string[] parts)
-        {
-            if (!RequireLoggedIn(handler)) return;
-            if (parts.Length < 5) return;
-
-            handler.Status = "Online";
-
-            string msgId = parts[1];
-            string content = parts[3];
-            string replyToId = parts[4];
-
-            string replyToSender = parts.Length > 5 ? parts[5] : string.Empty;
-            string replyToPreview = parts.Length > 6 ? parts[6] : string.Empty;
-
-            // Tra trong history để lấy đúng sender/preview gốc, không tin tưởng hoàn toàn dữ liệu client gửi lên
-            if (_history.TryGet(replyToId, out MessageModel original))
-            {
-                replyToSender = original.Sender;
-                replyToPreview = MessageModel.MakePreview(original.Content);
-            }
-
-            var model = new MessageModel(handler.Username, content)
-            {
-                MessageId = string.IsNullOrWhiteSpace(msgId) ? Guid.NewGuid().ToString("N") : msgId,
-                IsReply = true,
-                ReplyToId = replyToId,
-                ReplyToSender = replyToSender,
-                ReplyToPreview = replyToPreview
-            };
-            _history.Add(model);
-
-            string safePacket = PacketBuilder.BuildReplyMessage(
-                model.MessageId, handler.Username, content, replyToId, replyToSender, replyToPreview);
-
-            string display = $"{handler.Username} (trả lời {replyToSender}): {content}";
-            OnMessageReceived?.Invoke(display);
-            BroadcastToLoggedIn(safePacket);
-        }
-
-        // FORWARD_MESSAGE|msgId|sender|content|originalSender
-        // Client chỉ cần gửi: FORWARD_MESSAGE|msgId|originalMessageId  -> server tra nội dung + người gửi gốc
-        private void HandleForwardMessage(ClientHandler handler, string[] parts)
-        {
-            if (!RequireLoggedIn(handler)) return;
-            if (parts.Length < 3) return;
+                    // LOGIN|Alice
+                    if (command == PacketTypes.Login && parts.Length >= 3)
+                    {
+                        string username = parts[1].Trim();
+                        string passwordHash = PasswordHasher.Hash(parts[2]);
 
             handler.Status = "Online";
 
@@ -304,158 +314,17 @@ namespace TCPIP_Collaborative_Chat_System.Network
                 return;
             }
 
-            var model = new MessageModel(handler.Username, content)
-            {
-                MessageId = string.IsNullOrWhiteSpace(msgId) ? Guid.NewGuid().ToString("N") : msgId,
-                IsForwarded = true,
-                OriginalSender = originalSender
-            };
-            _history.Add(model);
+                        if (!UserRepository.ValidateLogin(username, passwordHash))
+                        {
+                            SendTo(handler, PacketBuilder.BuildLoginFail("Sai tài khoản hoặc mật khẩu"));
+                            return;
+                        }
 
-            string safePacket = PacketBuilder.BuildForwardMessage(
-                model.MessageId, handler.Username, content, originalSender);
-
-            string display = $"{handler.Username} (chuyển tiếp từ {originalSender}): {content}";
-            OnMessageReceived?.Invoke(display);
-            BroadcastToLoggedIn(safePacket);
-        }
-
-        // Không-room (2.5): EMOJI_REACTION|msgId|reactor|emoji  (4 phần)
-        // Room (Giai đoạn 3): EMOJI_REACTION|roomName|msgId|reactor|emoji  (5 phần)
-        private void HandleEmojiReaction(ClientHandler handler, string[] parts)
-        {
-            if (!RequireLoggedIn(handler)) return;
-
-            if (parts.Length >= 5)
-            {
-                // Dạng room-scoped
-                string roomName = parts[1];
-                string messageId = parts[2];
-                string emoji = parts[4];
-
-                string packet = PacketBuilder.BuildRoomEmojiReactionBroadcast(roomName, messageId, handler.Username, emoji);
-                OnMessageReceived?.Invoke($"[{roomName}] {handler.Username} đã react {emoji} vào {messageId}");
-
-                if (_rooms.RoomExists(roomName))
-                    BroadcastToRoom(roomName, packet);
-                else
-                    BroadcastToLoggedIn(packet);
-                return;
-            }
-
-            if (parts.Length < 4) return;
-
-            string nonRoomMessageId = parts[1];
-            string nonRoomEmoji = parts[3];
-
-            string safePacket = PacketBuilder.BuildEmojiReactionBroadcast(nonRoomMessageId, handler.Username, nonRoomEmoji);
-            string display = $"{handler.Username} đã phản ứng với {nonRoomMessageId} bằng {nonRoomEmoji}";
-            OnMessageReceived?.Invoke(display);
-            BroadcastToLoggedIn(safePacket);
-        }
-
-        // ===================================================================
-        // Giai đoạn 3: Multi-Room Architecture
-        // ===================================================================
-
-        // CREATE_ROOM|roomName
-        private void HandleCreateRoom(ClientHandler handler, string[] parts)
-        {
-            if (!RequireLoggedIn(handler)) return;
-            if (parts.Length < 2) return;
-
-            string roomName = parts[1].Trim();
-            var result = _rooms.CreateRoom(roomName);
-
-            switch (result)
-            {
-                case RoomManager.CreateResult.Created:
-                    SendTo(handler, PacketBuilder.BuildCreateRoomOk(roomName));
-                    BroadcastToLoggedIn(PacketBuilder.BuildRoomCreated(roomName));
-                    OnMessageReceived?.Invoke($"[ROOM] {handler.Username} đã tạo phòng '{roomName}'");
-                    break;
-
-                case RoomManager.CreateResult.AlreadyExists:
-                    SendTo(handler, PacketBuilder.BuildError(PacketTypes.ErrorRoomExists, roomName));
-                    break;
-
-                case RoomManager.CreateResult.InvalidName:
-                    SendTo(handler, PacketBuilder.BuildError("ROOM_INVALID_NAME", roomName));
-                    break;
-            }
-        }
-
-        // JOIN_ROOM|roomName
-        private void HandleJoinRoom(ClientHandler handler, string[] parts)
-        {
-            if (!RequireLoggedIn(handler)) return;
-            if (parts.Length < 2) return;
-
-            string roomName = parts[1].Trim();
-            string previousRoom = handler.CurrentRoom;
-
-            var result = _rooms.Join(handler, roomName);
-
-            switch (result)
-            {
-                case RoomManager.JoinResult.Joined:
-                    // 3.5 + 3.8: báo cho các thành viên còn lại của room CŨ rằng user đã rời
-                    if (!string.IsNullOrEmpty(previousRoom) &&
-                        !previousRoom.Equals(roomName, StringComparison.OrdinalIgnoreCase))
-                    {
-                        BroadcastToRoom(previousRoom,
-                            PacketBuilder.BuildRoomSystem(previousRoom, $"{handler.Username} left"));
-                        BroadcastToRoom(previousRoom, PacketBuilder.BuildRoomUserLeft(previousRoom, handler.Username));
-                        BroadcastRoomUserList(previousRoom);
-                    }
-
-                    SendTo(handler, PacketBuilder.BuildJoinRoomOk(roomName));
-
-                    BroadcastToRoom(roomName, PacketBuilder.BuildRoomSystem(roomName, $"{handler.Username} joined"));
-                    BroadcastToRoom(roomName, PacketBuilder.BuildRoomUserJoined(roomName, handler.Username));
-                    BroadcastRoomUserList(roomName);
-
-                    OnMessageReceived?.Invoke($"[ROOM] {handler.Username} -> {roomName}");
-                    break;
-
-                case RoomManager.JoinResult.RoomNotFound:
-                    SendTo(handler, PacketBuilder.BuildError(PacketTypes.ErrorRoomNotFound, roomName));
-                    break;
-
-                case RoomManager.JoinResult.NotLoggedIn:
-                    SendTo(handler, PacketBuilder.BuildLoginFail("Bạn chưa đăng nhập"));
-                    break;
-            }
-        }
-
-        // LEAVE_ROOM|roomName
-        private void HandleLeaveRoom(ClientHandler handler, string[] parts)
-        {
-            if (!RequireLoggedIn(handler)) return;
-            if (parts.Length < 2) return;
-
-            string roomName = parts[1].Trim();
-            var result = _rooms.Leave(handler, roomName);
-
-            if (result == RoomManager.LeaveResult.Left)
-            {
-                SendTo(handler, PacketBuilder.BuildLeaveRoomOk(roomName));
-                BroadcastToRoom(roomName, PacketBuilder.BuildRoomSystem(roomName, $"{handler.Username} left"));
-                BroadcastToRoom(roomName, PacketBuilder.BuildRoomUserLeft(roomName, handler.Username));
-                BroadcastRoomUserList(roomName);
-                OnMessageReceived?.Invoke($"[ROOM] {handler.Username} left {roomName}");
-            }
-            else
-            {
-                SendTo(handler, PacketBuilder.BuildError(PacketTypes.ErrorRoomNotFound, roomName));
-            }
-        }
-
-        // GET_ROOMS
-        private void HandleGetRooms(ClientHandler handler)
-        {
-            SendTo(handler, PacketBuilder.BuildRoomList(_rooms.GetRoomNames()));
-        }
+                        // Đăng ký username thành công
+                        handler.Username = username;
+                        handler.CurrentRoom = null;
+                        SendTo(handler, PacketBuilder.BuildLoginOk(username));
+                        HandleGetRooms(handler);
 
         private void BroadcastRoomUserList(string roomName)
         {
@@ -701,10 +570,27 @@ namespace TCPIP_Collaborative_Chat_System.Network
             string endpoint = "unknown";
             string username = handler.Username;
             try { endpoint = handler.Socket.RemoteEndPoint?.ToString(); } catch { }
+            if (!string.IsNullOrEmpty(handler.CurrentRoom))
+            {
+                ChatRoom room = FindRoom(handler.CurrentRoom);
 
-            string currentRoom = _rooms.LeaveCurrentRoom(handler);
-
-            handler.Status = "Disconnected";
+                if (room != null)
+                {
+                    lock (room.Members)
+                    {
+                        room.Members.Remove(handler);
+                        if (room.Members.Count == 0 && room.Owner != "SYSTEM")
+                        {
+                            lock (_rooms)
+                            {
+                                _rooms.Remove(room);
+                            }
+                        }
+                        BroadcastRoomList();
+                    }
+                    BroadcastRoomSystem(room, $"{handler.Username} disconnected");
+                }
+            }
             handler.Close();
             lock (_clients)
                 _clients.Remove(handler);
@@ -821,5 +707,270 @@ namespace TCPIP_Collaborative_Chat_System.Network
 
             return -1;
         }
+        private ChatRoom FindRoom(string roomName)
+        {
+            lock (_rooms)
+            {
+                return _rooms.FirstOrDefault(r =>
+                    r.RoomName.Equals(
+                        roomName,
+                        StringComparison.OrdinalIgnoreCase));
+            }
+        }
+        private List<string> GetRoomNames()
+        {
+            lock (_rooms)
+            {
+                return _rooms
+                    .Select(r => r.RoomName)
+                    .ToList();
+            }
+        }
+
+        private void HandleCreateRoom(ClientHandler handler, string roomName, int maxUsers, bool isPrivate, string password)
+        {
+            lock (_rooms)
+            {
+                if (_rooms.Count >= MAX_ROOMS)
+                {
+                    SendTo(handler, PacketBuilder.BuildSystem("Đã đạt giới hạn số Room"));
+                    return;
+                }
+            }
+            if (string.IsNullOrWhiteSpace(roomName))
+                return;
+
+            lock (_rooms)
+            {
+                bool exists = _rooms.Any(r =>
+                    r.RoomName.Equals(
+                        roomName,
+                        StringComparison.OrdinalIgnoreCase));
+
+                if (exists)
+                {
+                    SendTo(
+                        handler,
+                        PacketBuilder.BuildRoomExists(roomName));
+
+                    return;
+                }
+
+                ChatRoom room = new ChatRoom
+                {
+                    RoomName = roomName,
+                    Owner = handler.Username,
+                    MaxUsers = maxUsers,
+                    IsPrivate = isPrivate,
+                    Password = password
+                };
+                _roomRepo.AddRoom(room);
+                _rooms.Add(room);
+                OnStatusChanged?.Invoke($"[CREATE] {handler.Username} tạo room {roomName} | Max={maxUsers} | Private={isPrivate}");
+                BroadcastRoomList();
+
+                SendTo(
+                    handler,
+                    PacketBuilder.BuildCreateRoomOk(roomName));
+
+                OnStatusChanged?.Invoke($"[CREATE] {handler.Username} tạo room {roomName}");
+            }
+        }
+        private void HandleJoinRoom(ClientHandler handler, string roomName, string password)
+        {
+            if (!string.IsNullOrEmpty(handler.CurrentRoom))
+            {
+                SendTo(handler, PacketBuilder.BuildSystem("Bạn đang ở phòng khác"));
+                return;
+            }
+            ChatRoom room = FindRoom(roomName);
+            if (room == null)
+            {
+                SendTo(handler, PacketBuilder.BuildSystem($"Room {roomName} không tồn tại"));
+                return;
+            }
+            if (room.IsPrivate)
+            {
+                if (room.Password != password)
+                {
+                    SendTo(handler, PacketBuilder.BuildSystem("Sai mật khẩu phòng"));
+                    return;
+                }
+            }
+            if (room.Members.Count >= room.MaxUsers)
+            {
+                SendTo(handler, PacketBuilder.BuildSystem("Phòng đã đầy"));
+                return;
+            }
+
+            lock (room.Members)
+            {
+                if (!room.Members.Contains(handler))
+                {
+                    room.Members.Add(handler);
+                }
+            }
+
+            handler.CurrentRoom = roomName;
+            OnStatusChanged?.Invoke($"[JOIN] {handler.Username} -> {roomName}");
+            SendTo(handler, PacketBuilder.BuildJoinRoomOk(roomName));
+            // Gửi lịch sử chat của phòng
+            List<MessageModel> history = MessageRepository.GetMessages(roomName);
+            foreach (MessageModel msg in history)
+            {
+                SendTo(handler, PacketBuilder.BuildRoomHistory(roomName, msg.Sender, msg.Content, msg.CreatedAt.ToString()));
+            }
+            SendRoomMembers(handler, room);
+            BroadcastRoomSystem(room, $"{handler.Username} joined {roomName}");
+            BroadcastRoomUserJoined(room, handler.Username);
+            BroadcastRoomList();
+        }
+        private void HandleLeaveRoom(ClientHandler handler, string roomName)
+        {
+            ChatRoom room = FindRoom(roomName);
+            if (room == null)
+            {
+                return;
+            }
+
+            lock (room.Members)
+            {
+                room.Members.Remove(handler);
+            }
+            BroadcastRoomUserLeft(room, handler.Username);
+            BroadcastRoomList();
+            handler.CurrentRoom = null;
+            SendTo(handler, PacketBuilder.BuildLeaveRoomOk(roomName));
+            BroadcastRoomSystem(room, $"{handler.Username} left {roomName}");
+            OnStatusChanged?.Invoke($"[LEAVE] {handler.Username} <- {roomName}");
+        }
+        private void HandleRoomMessage(ClientHandler handler, string roomName, string message)
+        {
+            ChatRoom room = FindRoom(roomName);
+            if (room == null)
+                return;
+            if (handler.CurrentRoom != roomName)
+            {
+                SendTo(handler, PacketBuilder.BuildSystem("Bạn chưa tham gia room này"));
+                return;
+            }
+            // Lưu tin nhắn vào SQLite
+            MessageRepository.SaveMessage(roomName, handler.Username, message);
+            string packet = $"ROOM_MSG|{roomName}|{handler.Username}|{message}\n";
+
+            byte[] buffer = Encoding.UTF8.GetBytes(packet);
+
+            lock (room.Members)
+            {
+                foreach (var member in room.Members)
+                {
+                    try
+                    {
+                        member.Send(buffer);
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+            OnMessageReceived?.Invoke($"[{roomName}] {handler.Username}: {message}");
+        }
+        private void SendRoomMembers(ClientHandler handler, ChatRoom room)
+        {
+            List<string> users;
+            lock (room.Members)
+            {
+                users = room.Members
+                    .Where(m => m.IsLoggedIn)
+                    .Select(m => m.Username)
+                    .ToList();
+            }
+
+            SendTo(
+                handler,
+                PacketBuilder.BuildRoomUsers(
+                    room.RoomName,
+                    users));
+        }
+        private void HandleGetRooms(ClientHandler handler)
+        {
+            List<ChatRoom> rooms;
+            lock (_rooms)
+            {
+                rooms = _rooms.ToList();
+            }
+            SendTo(handler, PacketBuilder.BuildRoomList(rooms));
+        }
+        private void BroadcastRoomUserJoined(ChatRoom room, string username)
+        {
+            string packet = PacketBuilder.BuildRoomUserJoined(room.RoomName, username);
+            byte[] buffer = Encoding.UTF8.GetBytes(packet);
+            lock (room.Members)
+            {
+                foreach (var member in room.Members)
+                {
+                    try
+                    {
+                        member.Send(buffer);
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+        }
+        private void BroadcastRoomUserLeft(ChatRoom room, string username)
+        {
+            string packet = PacketBuilder.BuildRoomUserLeft(room.RoomName, username);
+            byte[] buffer = Encoding.UTF8.GetBytes(packet);
+            lock (room.Members)
+            {
+                foreach (var member in room.Members)
+                {
+                    try
+                    {
+                        member.Send(buffer);
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+        }
+        private void BroadcastRoomList()
+        {
+            List<ChatRoom> rooms;
+            lock (_rooms)
+            {
+                rooms = _rooms.ToList();
+            }
+            string packet = PacketBuilder.BuildRoomList(rooms);
+            lock (_clients)
+            {
+                foreach (var client in _clients)
+                {
+                    SendTo(client, packet);
+                }
+            }
+        }
+        private void BroadcastRoomSystem(ChatRoom room, string message)
+        {
+            string packet = PacketBuilder.BuildSystem(message);
+            byte[] buffer = Encoding.UTF8.GetBytes(packet);
+            lock (room.Members)
+            {
+                foreach (var member in room.Members)
+                {
+                    try
+                    {
+                        member.Send(buffer);
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+        }
     }
 }
+

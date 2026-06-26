@@ -1,7 +1,11 @@
 using System;
 using System.Windows.Forms;
+using TCPIP_Collaborative_Chat_System.Database;
 using TCPIP_Collaborative_Chat_System.Network;
 using TCPIP_Collaborative_Chat_System.Shared;
+using System.Net;
+using System.Net.Sockets;
+using System.Net.NetworkInformation;
 
 namespace TCPIP_Collaborative_Chat_System
 {
@@ -21,15 +25,46 @@ namespace TCPIP_Collaborative_Chat_System
             InitializeComponent();
             WireServerEvents();
         }
+        private readonly TcpChatServer _server = new TcpChatServer();
+        private int _clientCount;
+        private string GetLocalIPv4()
+        {
+            foreach (NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                if (ni.OperationalStatus != OperationalStatus.Up)
+                    continue;
 
-        // ===== Khởi động Server =====
+                if (ni.NetworkInterfaceType == NetworkInterfaceType.Loopback)
+                    continue;
 
+                // Bỏ qua VMware
+                if (ni.Description.Contains("VMware"))
+                    continue;
+
+                // Bỏ qua Tailscale
+                if (ni.Description.Contains("Tailscale"))
+                    continue;
+
+                IPInterfaceProperties ipProps = ni.GetIPProperties();
+
+                foreach (UnicastIPAddressInformation ip in ipProps.UnicastAddresses)
+                {
+                    if (ip.Address.AddressFamily == AddressFamily.InterNetwork)
+                    {
+                        return ip.Address.ToString();
+                    }
+                }
+            }
+
+            return "Không tìm thấy";
+        }
         private void btnInitServer_Click(object sender, EventArgs e)
         {
             try
             {
                 _server.Start((int)numServerPort.Value);
-                btnInitServer.Enabled = false;
+                ShowServerInformation();
+                UpdateChatContent($"Server đang lắng nghe tại {GetLocalIPv4()}:{numServerPort.Value}");
             }
             catch (Exception ex)
             {
@@ -79,14 +114,16 @@ namespace TCPIP_Collaborative_Chat_System
                     lblStatus.Text = status;
                 });
 
-            // Nhận / hiển thị log tin nhắn và sự kiện trên chat log
-            _server.OnMessageReceived += message =>
-                SafeInvoke(() =>
-                {
-                    txtChatContent.AppendText(message + Environment.NewLine);
-                    _messageCount++;
-                    lblTotalMessages.Text = _messageCount.ToString();
-                });
+        private void UpdateStatus(string s)
+        {
+            lblStatus.Text = s;
+        }
+        private void ShowServerInformation()
+        {
+            string ip = GetLocalIPv4();
+            lblServerIP.Text = "IP : " + ip;
+            lblStatus.Text = $"Server đang chạy - Client kết nối tới {ip}:{numServerPort.Value}";
+        }
 
             // Client mới kết nối → tăng đếm
             _server.OnClientConnected += endpoint =>
@@ -117,9 +154,7 @@ namespace TCPIP_Collaborative_Chat_System
                 });
         }
 
-        // ===== Helpers =====
-
-        private void SafeInvoke(Action action)
+        private void UpdateChatContent(string s)
         {
             if (IsDisposed) return;
 
