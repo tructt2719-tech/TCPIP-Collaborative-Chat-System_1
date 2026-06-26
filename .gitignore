@@ -2,5 +2,5 @@
 .vscode/
 bin/
 obj/
-.agents/
+.agent/
 *.md

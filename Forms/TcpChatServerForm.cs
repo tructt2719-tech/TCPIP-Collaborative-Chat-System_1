@@ -9,17 +9,8 @@ using System.Net.NetworkInformation;
 
 namespace TCPIP_Collaborative_Chat_System
 {
-    // TcpChatServerForm: Dashboard quản lý TCP Server.
-    // Controls từ Designer: btnInitServer, numServerPort, lblStatus,
-    //   lblClientCount, lblTotalMessages, lstUsers, txtChatContent,
-    //   txtMessage, btnSendMessage.
     public partial class TcpChatServerForm : Form
     {
-        private readonly TcpChatServer _server = new TcpChatServer();
-
-        private int _clientCount = 0;
-        private int _messageCount = 0;
-
         public TcpChatServerForm()
         {
             InitializeComponent();
@@ -68,51 +59,50 @@ namespace TCPIP_Collaborative_Chat_System
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    ex.Message,
-                    "Server Error",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                MessageBox.Show("Lỗi khởi tạo Server: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
-        // ===== Broadcast từ Server đến tất cả client =====
-
-        private void btnSendMessage_Click(object sender, EventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(txtMessage.Text))
-                return;
-
-            try
-            {
-                // Tạo messageId tạm cho tin nhắn từ Server
-                string msgId = Guid.NewGuid().ToString("N").Substring(0, 8);
-                string packet = PacketBuilder.BuildMessage("Server", "Server", txtMessage.Text);
-                _server.Broadcast(packet);
-
-                txtChatContent.AppendText("Server: " + txtMessage.Text + Environment.NewLine);
-                txtMessage.Clear();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(
-                    ex.Message,
-                    "Broadcast Error",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-            }
-        }
-
-        // ===== Kết nối sự kiện từ TcpChatServer vào UI =====
-
         private void WireServerEvents()
         {
-            // Trạng thái server thay đổi (ví dụ: "Server chạy ở port 9000")
-            _server.OnStatusChanged += status =>
+            _server.OnStatusChanged += status => SafeInvoke(() => UpdateStatus(status));
+            _server.OnMessageReceived += message => SafeInvoke(() => UpdateChatContent(message));
+            _server.OnClientConnected += endpoint =>
                 SafeInvoke(() =>
                 {
-                    lblStatus.Text = status;
+                    _clientCount++;
+                    UpdateStatus($"Client connected: {endpoint}");
                 });
+            _server.OnClientDisconnected += endpoint =>
+                SafeInvoke(() =>
+                {
+                    _clientCount = Math.Max(0, _clientCount - 1);
+                    UpdateStatus($"Client disconnected: {endpoint}");
+                });
+        }
+
+        private void SafeInvoke(Action action)
+        {
+            if (IsDisposed || !IsHandleCreated) return;
+            try
+            {
+                if (InvokeRequired)
+                {
+                    Invoke(action);
+                }
+                else
+                {
+                    action();
+                }
+            }
+            catch (ObjectDisposedException)
+            {
+                // Ignore callbacks after the form is closed.
+            }
+            catch (InvalidOperationException)
+            {
+                // Ignore callbacks when handle is no longer valid.
+            }
+        }
 
         private void UpdateStatus(string s)
         {
@@ -125,49 +115,46 @@ namespace TCPIP_Collaborative_Chat_System
             lblStatus.Text = $"Server đang chạy - Client kết nối tới {ip}:{numServerPort.Value}";
         }
 
-            // Client mới kết nối → tăng đếm
-            _server.OnClientConnected += endpoint =>
-                SafeInvoke(() =>
-                {
-                    _clientCount++;
-                    lblClientCount.Text = _clientCount.ToString();
-                });
+        private void btnSendMessage_Click(object sender, EventArgs e)
+        {
+            if (_clientCount == 0)
+            {
+                MessageBox.Show("Chưa có Client nào kết nối!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
-            // Client ngắt kết nối → giảm đếm
-            _server.OnClientDisconnected += endpoint =>
-                SafeInvoke(() =>
-                {
-                    _clientCount = Math.Max(0, _clientCount - 1);
-                    lblClientCount.Text = _clientCount.ToString();
-                });
+            if (string.IsNullOrWhiteSpace(txtMessage.Text))
+            {
+                return;
+            }
 
-            // Danh sách user online thay đổi → cập nhật lstUsers
-            _server.OnUserListChanged += users =>
-                SafeInvoke(() =>
-                {
-                    lstUsers.Items.Clear();
-                    foreach (string user in users.Split(','))
-                    {
-                        if (!string.IsNullOrWhiteSpace(user))
-                            lstUsers.Items.Add(user.Trim());
-                    }
-                });
+            try
+            {
+                string packet = PacketBuilder.BuildMessage("Server", txtMessage.Text);
+                _server.Broadcast(packet);
+                UpdateChatContent("Server: " + txtMessage.Text);
+                txtMessage.Text = "";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi gửi tin nhắn: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void UpdateChatContent(string s)
         {
-            if (IsDisposed) return;
-
-            if (InvokeRequired)
-                Invoke(action);
-            else
-                action();
+            txtChatContent.Text += s + "\r\n";
         }
 
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
             _server.Stop();
             base.OnFormClosed(e);
+        }
+
+        private void txtChatContent_TextChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }

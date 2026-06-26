@@ -1,4 +1,4 @@
-namespace TCPIP_Collaborative_Chat_System.Forms
+﻿namespace TCPIP_Collaborative_Chat_System.Forms
 {
     partial class LoginForm
     {

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -23,29 +23,6 @@ namespace TCPIP_Collaborative_Chat_System.Forms
             InitializeComponent();
 
             AcceptButton = btnRegister;
-        }
-                else
-                {
-                    MessageBox.Show(
-                        error ?? "Đăng ký thất bại",
-                        "Lỗi đăng ký",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Error);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(
-                    ex.Message,
-                    "Lỗi đăng ký",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-            }
-            finally
-            {
-                btnRegister.Enabled = true;
-                btnBack.Enabled = true;
-            }
         }
 
         private void Register()

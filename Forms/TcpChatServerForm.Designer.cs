@@ -2,40 +2,30 @@ namespace TCPIP_Collaborative_Chat_System
 {
     partial class TcpChatServerForm
     {
+        /// <summary>
+        /// Required designer variable.
+        /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        private System.Windows.Forms.Label lblTitle;
-
-        private System.Windows.Forms.Label lblServerPort;
-        private System.Windows.Forms.NumericUpDown numServerPort;
-        private System.Windows.Forms.Button btnInitServer;
-
-        private System.Windows.Forms.Label lblStatus;
-
-        private System.Windows.Forms.Label lblClientText;
-        private System.Windows.Forms.Label lblClientCount;
-
-        private System.Windows.Forms.Label lblMessageText;
-        private System.Windows.Forms.Label lblTotalMessages;
-
-        private System.Windows.Forms.ListBox lstUsers;
-
-        private System.Windows.Forms.RichTextBox txtChatContent;
-
-        private System.Windows.Forms.TextBox txtMessage;
-        private System.Windows.Forms.Button btnSendMessage;
-
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing &&
-                (components != null))
+            if (disposing && (components != null))
             {
                 components.Dispose();
             }
-
             base.Dispose(disposing);
         }
 
+        #region Windows Form Designer generated code
+
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
         private void InitializeComponent()
         {
             this.lblServerPort = new System.Windows.Forms.Label();
@@ -48,32 +38,9 @@ namespace TCPIP_Collaborative_Chat_System
             this.txtMessage = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.numServerPort)).BeginInit();
             this.SuspendLayout();
-
-            // TITLE
-
-            this.lblTitle.Text =
-                "TCP/IP CHAT SERVER DASHBOARD";
-
-            this.lblTitle.Font =
-                new System.Drawing.Font(
-                    "Segoe UI",
-                    18F,
-                    System.Drawing.FontStyle.Bold);
-
-            this.lblTitle.ForeColor =
-                System.Drawing.Color.DodgerBlue;
-
-            this.lblTitle.Location =
-                new System.Drawing.Point(0, 15);
-
-            this.lblTitle.Size =
-                new System.Drawing.Size(1200, 40);
-
-            this.lblTitle.TextAlign =
-                System.Drawing.ContentAlignment.MiddleCenter;
-
-            // PORT
-
+            // 
+            // lblServerPort
+            // 
             this.lblServerPort.AutoSize = true;
             this.lblServerPort.Location = new System.Drawing.Point(33, 27);
             this.lblServerPort.Name = "lblServerPort";
@@ -88,7 +55,7 @@ namespace TCPIP_Collaborative_Chat_System
             this.lblServerIP.Name = "lblServerIP";
             this.lblServerIP.Size = new System.Drawing.Size(77, 16);
             this.lblServerIP.TabIndex = 8;
-            this.lblServerIP.Text = "IP : Ch?a c�";
+            this.lblServerIP.Text = "IP : Chưa có";
             // 
             // numServerPort
             // 
@@ -113,7 +80,7 @@ namespace TCPIP_Collaborative_Chat_System
             this.btnInitServer.Name = "btnInitServer";
             this.btnInitServer.Size = new System.Drawing.Size(119, 30);
             this.btnInitServer.TabIndex = 2;
-            this.btnInitServer.Text = "Kh?i t?o Server";
+            this.btnInitServer.Text = "Khởi tạo Server";
             this.btnInitServer.UseVisualStyleBackColor = true;
             this.btnInitServer.Click += new System.EventHandler(this.btnInitServer_Click);
             // 
@@ -125,7 +92,7 @@ namespace TCPIP_Collaborative_Chat_System
             this.lblStatus.Name = "lblStatus";
             this.lblStatus.Size = new System.Drawing.Size(755, 23);
             this.lblStatus.TabIndex = 3;
-            this.lblStatus.Text = "Ch?a k?t n?i";
+            this.lblStatus.Text = "Chưa kết nối";
             this.lblStatus.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // btnSendMessage
@@ -134,7 +101,7 @@ namespace TCPIP_Collaborative_Chat_System
             this.btnSendMessage.Name = "btnSendMessage";
             this.btnSendMessage.Size = new System.Drawing.Size(119, 23);
             this.btnSendMessage.TabIndex = 5;
-            this.btnSendMessage.Text = "G?i tin nh?n";
+            this.btnSendMessage.Text = "Gửi tin nhắn";
             this.btnSendMessage.UseVisualStyleBackColor = true;
             this.btnSendMessage.Click += new System.EventHandler(this.btnSendMessage_Click);
             // 
@@ -160,6 +127,7 @@ namespace TCPIP_Collaborative_Chat_System
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
             this.Controls.Add(this.txtMessage);
+            this.Controls.Add(this.txtChatContent);
             this.Controls.Add(this.btnSendMessage);
             this.Controls.Add(this.lblStatus);
             this.Controls.Add(this.btnInitServer);
@@ -171,6 +139,7 @@ namespace TCPIP_Collaborative_Chat_System
             ((System.ComponentModel.ISupportInitialize)(this.numServerPort)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
+
         }
 
         #endregion

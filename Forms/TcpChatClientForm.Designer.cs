@@ -1,62 +1,31 @@
-using System;
-using System.ComponentModel;
-using System.Drawing;
-using System.Windows.Forms;
-
 namespace TCPIP_Collaborative_Chat_System
 {
     partial class TcpChatClientForm
     {
-        private IContainer components = null;
-
-        private Label lblTitle;
-
-        private Label lblServerIP;
-        private Label lblPort;
-        private Label Username;
-        private Label lblStatus;
-
-        private TextBox txtServerIP;
-        private TextBox txtUsername;
-
-        private NumericUpDown numServerPort;
-
-        private Button btnConnect;
-        private Button btnSendMessage;
-
-        private Button btnEmoji;
-        private Button btnReply;
-        private Button btnForward;
-        private Button btnFile;
-        private Button btnCancelReply;
-
-        private RichTextBox txtChatContent;
-        private RichTextBox txtMessage;
-
-        private Label lblReplyPreview;
-        private Label lblSelectedMessage;
-        private Label lblUsersTitle;
-
-        private Label lblRoomsTitle;
-        private Label lblCurrentRoom;
-        private Button btnCreateRoom;
-        private ListBox lstRooms;
+        /// <summary>
+        /// Required designer variable.
+        /// </summary>
+        private System.ComponentModel.IContainer components = null;
 
         /// <summary>
-        /// Panel chứa danh sách Online User. Mỗi user được render thành 1 hàng con
-        /// gồm PictureBox (avatar) + Label (username) - xem RenderUserList() trong TcpChatClientForm.cs.
-        /// Thay cho ListBox cũ (lstUsers) vì ListBox không hỗ trợ hiển thị ảnh avatar.
+        /// Clean up any resources being used.
         /// </summary>
-        private Panel pnlUsers;
-
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
+            {
                 components.Dispose();
-
+            }
             base.Dispose(disposing);
         }
 
+        #region Windows Form Designer generated code
+
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
         private void InitializeComponent()
         {
             this.lblServerIP = new System.Windows.Forms.Label();
@@ -80,25 +49,14 @@ namespace TCPIP_Collaborative_Chat_System
             ((System.ComponentModel.ISupportInitialize)(this.numServerPort)).BeginInit();
             this.grpRooms.SuspendLayout();
             this.SuspendLayout();
-
-            // FORM
-
-            this.BackColor = Color.White;
-            this.ClientSize = new Size(1300, 750);
-            this.StartPosition = FormStartPosition.CenterScreen;
-            this.Text = "TCP/IP Collaborative Chat";
-
-            // TITLE
-
-            this.lblTitle.Text = "TCP/IP COLLABORATIVE CHAT SYSTEM";
-            this.lblTitle.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
-            this.lblTitle.ForeColor = Color.DodgerBlue;
-            this.lblTitle.Location = new Point(0, 10);
-            this.lblTitle.Size = new Size(1300, 40);
-            this.lblTitle.TextAlign = ContentAlignment.MiddleCenter;
-
-            // SERVER IP
-
+            // 
+            // lblServerIP
+            // 
+            this.lblServerIP.AutoSize = true;
+            this.lblServerIP.Location = new System.Drawing.Point(24, 19);
+            this.lblServerIP.Name = "lblServerIP";
+            this.lblServerIP.Size = new System.Drawing.Size(62, 16);
+            this.lblServerIP.TabIndex = 0;
             this.lblServerIP.Text = "Server IP";
             // 
             // lblPort
@@ -290,34 +248,8 @@ namespace TCPIP_Collaborative_Chat_System
             this.Controls.Add(this.btnCreateRoom);
             this.Controls.Add(this.grpRooms);
             this.Controls.Add(this.txtUsername);
-
-            this.Controls.Add(this.numServerPort);
-
-            this.Controls.Add(this.btnConnect);
-
-            this.Controls.Add(this.lblStatus);
-
-            this.Controls.Add(this.lstRooms);
-            this.Controls.Add(this.lblRoomsTitle);
-            this.Controls.Add(this.btnCreateRoom);
-            this.Controls.Add(this.lblCurrentRoom);
-
-            this.Controls.Add(this.lblUsersTitle);
-            this.Controls.Add(this.pnlUsers);
-
+            this.Controls.Add(this.Username);
             this.Controls.Add(this.txtChatContent);
-            this.Controls.Add(this.lblSelectedMessage);
-
-            this.Controls.Add(this.lblReplyPreview);
-            this.Controls.Add(this.btnCancelReply);
-
-            this.Controls.Add(this.txtMessage);
-
-            this.Controls.Add(this.btnEmoji);
-            this.Controls.Add(this.btnReply);
-            this.Controls.Add(this.btnForward);
-            this.Controls.Add(this.btnFile);
-
             this.Controls.Add(this.btnSendMessage);
             this.Controls.Add(this.txtMessage);
             this.Controls.Add(this.lblStatus);
@@ -336,6 +268,7 @@ namespace TCPIP_Collaborative_Chat_System
             this.grpRooms.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
+
         }
 
         #endregion

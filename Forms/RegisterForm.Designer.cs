@@ -1,4 +1,4 @@
-namespace TCPIP_Collaborative_Chat_System.Forms
+﻿namespace TCPIP_Collaborative_Chat_System.Forms
 {
     partial class RegisterForm
     {
@@ -64,33 +64,6 @@ namespace TCPIP_Collaborative_Chat_System.Forms
             this.txtUserName.Size = new System.Drawing.Size(609, 22);
             this.txtUserName.TabIndex = 2;
             // 
-            // lblConfirm
-            //
-            this.lblConfirm.AutoSize = true;
-            this.lblConfirm.ForeColor = System.Drawing.Color.White;
-            this.lblConfirm.Location = new System.Drawing.Point(40, 230);
-            this.lblConfirm.Name = "lblConfirm";
-            this.lblConfirm.Size = new System.Drawing.Size(104, 15);
-            this.lblConfirm.TabIndex = 3;
-            this.lblConfirm.Text = "Confirm Password";
-            //
-            // lblEmail
-            //
-            this.lblEmail.AutoSize = true;
-            this.lblEmail.ForeColor = System.Drawing.Color.White;
-            this.lblEmail.Location = new System.Drawing.Point(40, 290);
-            this.lblEmail.Name = "lblEmail";
-            this.lblEmail.Size = new System.Drawing.Size(36, 15);
-            this.lblEmail.TabIndex = 4;
-            this.lblEmail.Text = "Email";
-            //
-            // txtUsername
-            //
-            this.txtUsername.Location = new System.Drawing.Point(180, 105);
-            this.txtUsername.Name = "txtUsername";
-            this.txtUsername.Size = new System.Drawing.Size(250, 23);
-            this.txtUsername.TabIndex = 5;
-            //
             // txtPassword
             // 
             this.txtPassword.Location = new System.Drawing.Point(106, 95);

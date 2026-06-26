@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -57,7 +57,6 @@ namespace TCPIP_Collaborative_Chat_System.Forms
         {
             if (!SettingsManager.Exists())
                 return;
-                }
 
             chkRemember.Checked = SettingsManager.Read("Remember") == "True";
 
@@ -154,8 +153,6 @@ namespace TCPIP_Collaborative_Chat_System.Forms
                 txtPassword.Clear();
                 txtPassword.Focus();
             }
-
-            settings.Save();
         }
     }
 }

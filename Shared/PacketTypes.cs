@@ -1,4 +1,4 @@
-Ôªøusing System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,10 +8,6 @@ namespace TCPIP_Collaborative_Chat_System.Shared
 {
     public static class PacketTypes
     {
-        public const char Separator = '|';
-        public const string Sep = "|";
-        public const string NewLine = "\n";
-
         public const string Login = "LOGIN";
         public const string LoginOk = "LOGIN_OK";
         public const string LoginFail = "LOGIN_FAIL";
@@ -20,10 +16,9 @@ namespace TCPIP_Collaborative_Chat_System.Shared
         public const string RegisterFail = "REGISTER_FAIL";
 
         public const string Message = "MESSAGE";
-        public const string RoomMessage = "ROOM_MESSAGE";
         public const string Disconnect = "DISCONNECT";
-        public const string System = "SYSTEM";      // th√¥ng b√°o user join/leave
-        public const string UserList = "USER_LIST";   // danh s√°ch online
+        public const string System = "SYSTEM";      // thÙng b·o user join/leave
+        public const string UserList = "USER_LIST";   // danh s·ch online
         public const string CreateRoom = "CREATE_ROOM";
         public const string CreateRoomOk = "CREATE_ROOM_OK";
         public const string RoomExists = "ROOM_EXISTS";
