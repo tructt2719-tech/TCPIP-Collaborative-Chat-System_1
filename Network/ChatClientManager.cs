@@ -24,6 +24,7 @@ namespace TCPIP_Collaborative_Chat_System.Network
         public event Action<string> OnRoomUsers;
         public event Action<string> OnRoomUserJoined;
         public event Action<string> OnRoomUserLeft;
+        public event Action<string> OnRoomHistory;
         public event Action<List<string>> OnRoomListReceived;
 
 
@@ -248,6 +249,19 @@ namespace TCPIP_Collaborative_Chat_System.Network
                             }
                             break;
 
+                        case "ROOM_HISTORY":
+                            {
+                                if (parts.Length >= 5)
+                                {
+                                    OnRoomHistory?.Invoke(
+                                        "[" + parts[4] + "] "
+                                        + parts[2]
+                                        + ": "
+                                        + parts[3]);
+                                }
+                                break;
+                            }
+
                         case "ROOM_USERS":
                             if (parts.Length >= 2)
                             {
@@ -360,12 +374,19 @@ namespace TCPIP_Collaborative_Chat_System.Network
                 handleLine(line);
             }
         }
-        public void Login(string username)
+        public void Login(string username, string password)
         {
-            string packet = $"LOGIN|{username}\n";
+            string packet = $"{PacketTypes.Login}|{username}|{password}\n";
             byte[] buffer = Encoding.UTF8.GetBytes(packet);
-            try { _socket?.Send(buffer); }
-            catch (Exception ex) { OnStatusChanged?.Invoke("Gửi login thất bại: " + ex.Message); }
+            try
+            {
+                _socket?.Send(buffer);
+            }
+            catch (Exception ex)
+            {
+                OnStatusChanged?.Invoke(
+                    "Gửi login thất bại: " + ex.Message);
+            }
         }
 
         private static int IndexOfNewline(StringBuilder builder)

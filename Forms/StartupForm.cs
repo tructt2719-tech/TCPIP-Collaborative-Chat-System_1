@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using TCPIP_Collaborative_Chat_System.Forms;
+using TCPIP_Collaborative_Chat_System.Models;
 
 namespace TCPIP_Collaborative_Chat_System
 {
@@ -18,18 +20,19 @@ namespace TCPIP_Collaborative_Chat_System
         }
         private void btnOK_Click(object sender, EventArgs e)
         {
-            // Nếu chọn Server
+            LoginForm login;
+
             if (radServer.Checked)
             {
-                TcpChatServerForm serverForm = new TcpChatServerForm();
-                serverForm.Show();
+                login = new LoginForm(AppMode.Server);
             }
             else
             {
-                // Nếu chọn Client
-                TcpChatClientForm clientForm = new TcpChatClientForm();
-                clientForm.Show();
+                login = new LoginForm(AppMode.Client);
             }
+
+            login.Show();
+            
         }
 
         private void btnExit_Click(object sender, EventArgs e)

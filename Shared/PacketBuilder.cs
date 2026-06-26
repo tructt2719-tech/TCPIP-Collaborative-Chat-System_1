@@ -63,5 +63,19 @@ namespace TCPIP_Collaborative_Chat_System.Shared
             sb.Append("\n");
             return sb.ToString();
         }
+        public static string BuildRegisterOk(string username)
+        {
+            return $"REGISTER_OK|{username}\n";
+        }
+
+        public static string BuildRegisterFail(string reason)
+        {
+            return $"REGISTER_FAIL|{reason}\n";
+        }
+        public static string BuildRoomHistory(string roomName, string sender, string content, string time)
+        {
+            return $"ROOM_HISTORY|{roomName}|{sender}|{content}|{time}\n";
+        }
+
     }
 }

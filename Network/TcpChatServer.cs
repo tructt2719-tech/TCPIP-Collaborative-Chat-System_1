@@ -6,11 +6,17 @@ using System.Net.Sockets;
 using System.Text;
 using TCPIP_Collaborative_Chat_System.Shared;
 using TCPIP_Collaborative_Chat_System.Models;
+using TCPIP_Collaborative_Chat_System.Database;
 
 namespace TCPIP_Collaborative_Chat_System.Network
 {
     public class TcpChatServer
     {
+        public TcpChatServer()
+        {
+           
+        }
+
         // Events to notify UI - no direct UI dependency
         public event Action<string> OnStatusChanged;
         public event Action<string> OnMessageReceived;
@@ -18,47 +24,66 @@ namespace TCPIP_Collaborative_Chat_System.Network
         public event Action<string> OnClientDisconnected;
         public event Action<string> OnUserListChanged;
 
-
         private Socket _serverSocket;
         private readonly List<ClientHandler> _clients = new List<ClientHandler>();
         private readonly List<ChatRoom> _rooms = new List<ChatRoom>();
+        private readonly RoomRepository _roomRepo = new RoomRepository();
+       
         private const int MAX_ROOMS = 20;
         public void Start(int port)
         {
             _serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             _serverSocket.Bind(new IPEndPoint(IPAddress.Any, port));
             _serverSocket.Listen(10);
-            _rooms.Add(new ChatRoom
+            if (!_roomRepo.RoomExists("Study"))
             {
-                RoomName = "Gaming",
-                MaxUsers = 10,
-                Owner = "SYSTEM",
-                IsPrivate = false
-            });
+                _roomRepo.AddRoom(
+                    new ChatRoom
+                    {
+                        RoomName = "Study",
+                        Owner = "SYSTEM",
+                        MaxUsers = 10,
+                        IsPrivate = false
+                    });
 
-            _rooms.Add(new ChatRoom
-            {
-                RoomName = "Study",
-                MaxUsers = 10,
-                Owner = "SYSTEM",
-                IsPrivate = false
-            });
+                _roomRepo.AddRoom(
+                    new ChatRoom
+                    {
+                        RoomName = "Music",
+                        Owner = "SYSTEM",
+                        MaxUsers = 10,
+                        IsPrivate = false
+                    });
 
-            _rooms.Add(new ChatRoom
-            {
-                RoomName = "Music",
-                MaxUsers = 10,
-                Owner = "SYSTEM",
-                IsPrivate = false
-            });
+                _roomRepo.AddRoom(
+                    new ChatRoom
+                    {
+                        RoomName = "Team",
+                        Owner = "SYSTEM",
+                        MaxUsers = 10,
+                        IsPrivate = false
+                    });
 
-            _rooms.Add(new ChatRoom
-            {
-                RoomName = "Team",
-                MaxUsers = 10,
-                Owner = "SYSTEM",
-                IsPrivate = false
-            });
+                _roomRepo.AddRoom(
+                    new ChatRoom
+                    {
+                        RoomName = "Gaming",
+                        Owner = "SYSTEM",
+                        MaxUsers = 10,
+                        IsPrivate = false
+                    });
+
+                _roomRepo.AddRoom(
+                    new ChatRoom
+                    {
+                        RoomName = "Work",
+                        Owner = "SYSTEM",
+                        MaxUsers = 10,
+                        IsPrivate = false
+                    });
+            }
+            _rooms.Clear();
+            _rooms.AddRange(_roomRepo.GetAllRooms());
             _serverSocket.BeginAccept(HandleConnection, null);
             OnStatusChanged?.Invoke("Đang chờ kết nối...");
         }
@@ -211,10 +236,41 @@ namespace TCPIP_Collaborative_Chat_System.Network
                         return;
                     }
 
-                    // LOGIN|Alice
-                    if (command == PacketTypes.Login && parts.Length >= 2)
+                    // REGISTER|username|password
+                    if (command == PacketTypes.Register && parts.Length >= 3)
                     {
                         string username = parts[1].Trim();
+                        string password = parts[2];
+
+                        if (string.IsNullOrWhiteSpace(username))
+                        {
+                            SendTo(handler,
+                                PacketBuilder.BuildRegisterFail("Username không được rỗng"));
+                            return;
+                        }
+
+                        if (UserRepository.UserExists(username))
+                        {
+                            SendTo(handler,
+                                PacketBuilder.BuildRegisterFail("Username đã tồn tại"));
+                            return;
+                        }
+
+                        UserRepository.AddUser(username, password);
+
+                        SendTo(handler,
+                            PacketBuilder.BuildRegisterOk(username));
+
+                        OnStatusChanged?.Invoke($"Đăng ký thành công: {username}");
+
+                        return;
+                    }
+
+                    // LOGIN|Alice
+                    if (command == PacketTypes.Login && parts.Length >= 3)
+                    {
+                        string username = parts[1].Trim();
+                        string passwordHash = PasswordHasher.Hash(parts[2]);
 
                         // Kiểm tra username rỗng
                         if (string.IsNullOrWhiteSpace(username))
@@ -223,15 +279,9 @@ namespace TCPIP_Collaborative_Chat_System.Network
                             return;
                         }
 
-                        // Kiểm tra trùng username
-                        bool isDuplicate;
-                        lock (_clients)
-                            isDuplicate = _clients.Any(c => c.IsLoggedIn &&
-                                          c.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
-
-                        if (isDuplicate)
+                        if (!UserRepository.ValidateLogin(username, passwordHash))
                         {
-                            SendTo(handler, PacketBuilder.BuildLoginFail("Username đã tồn tại"));
+                            SendTo(handler, PacketBuilder.BuildLoginFail("Sai tài khoản hoặc mật khẩu"));
                             return;
                         }
 
@@ -444,6 +494,7 @@ namespace TCPIP_Collaborative_Chat_System.Network
                     IsPrivate = isPrivate,
                     Password = password
                 };
+                _roomRepo.AddRoom(room);
                 _rooms.Add(room);
                 OnStatusChanged?.Invoke($"[CREATE] {handler.Username} tạo room {roomName} | Max={maxUsers} | Private={isPrivate}");
                 BroadcastRoomList();
@@ -493,6 +544,12 @@ namespace TCPIP_Collaborative_Chat_System.Network
             handler.CurrentRoom = roomName;
             OnStatusChanged?.Invoke($"[JOIN] {handler.Username} -> {roomName}");
             SendTo(handler, PacketBuilder.BuildJoinRoomOk(roomName));
+            // Gửi lịch sử chat của phòng
+            List<MessageModel> history = MessageRepository.GetMessages(roomName);
+            foreach (MessageModel msg in history)
+            {
+                SendTo(handler, PacketBuilder.BuildRoomHistory(roomName, msg.Sender, msg.Content, msg.CreatedAt.ToString()));
+            }
             SendRoomMembers(handler, room);
             BroadcastRoomSystem(room, $"{handler.Username} joined {roomName}");
             BroadcastRoomUserJoined(room, handler.Username);
@@ -527,6 +584,8 @@ namespace TCPIP_Collaborative_Chat_System.Network
                 SendTo(handler, PacketBuilder.BuildSystem("Bạn chưa tham gia room này"));
                 return;
             }
+            // Lưu tin nhắn vào SQLite
+            MessageRepository.SaveMessage(roomName, handler.Username, message);
             string packet = $"ROOM_MSG|{roomName}|{handler.Username}|{message}\n";
 
             byte[] buffer = Encoding.UTF8.GetBytes(packet);

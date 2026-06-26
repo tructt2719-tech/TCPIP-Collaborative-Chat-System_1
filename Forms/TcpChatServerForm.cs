@@ -1,5 +1,6 @@
 using System;
 using System.Windows.Forms;
+using TCPIP_Collaborative_Chat_System.Database;
 using TCPIP_Collaborative_Chat_System.Network;
 using TCPIP_Collaborative_Chat_System.Shared;
 

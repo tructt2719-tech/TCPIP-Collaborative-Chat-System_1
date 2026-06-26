@@ -11,6 +11,10 @@ namespace TCPIP_Collaborative_Chat_System.Shared
         public const string Login = "LOGIN";
         public const string LoginOk = "LOGIN_OK";
         public const string LoginFail = "LOGIN_FAIL";
+        public const string Register = "REGISTER";
+        public const string RegisterOk = "REGISTER_OK";
+        public const string RegisterFail = "REGISTER_FAIL";
+
         public const string Message = "MESSAGE";
         public const string Disconnect = "DISCONNECT";
         public const string System = "SYSTEM";      // thông báo user join/leave
@@ -35,6 +39,7 @@ namespace TCPIP_Collaborative_Chat_System.Shared
 
         public const string GetRooms = "GET_ROOMS";
         public const string RoomUsers = "ROOM_USERS";
+        public const string RoomHistory = "ROOM_HISTORY";
     }
 
 }

@@ -9,9 +9,15 @@ namespace TCPIP_Collaborative_Chat_System
     public partial class TcpChatClientForm : Form
     {
         private string _currentRoom = "";
-        public TcpChatClientForm()
+        private readonly string _username;
+        private readonly string _password;
+        public TcpChatClientForm(string username, string password)
         {
             InitializeComponent();
+            _username = username;
+            _password = password;
+            txtUsername.Text = username;
+            txtUsername.Enabled = false;
             WireClientEvents();
         }
 
@@ -31,16 +37,7 @@ namespace TCPIP_Collaborative_Chat_System
             }
 
             try
-            {
-                // MỚI
-                string username = txtUsername.Text.Trim();
-                if (string.IsNullOrWhiteSpace(username))
-                {
-                    btnConnect.Enabled = true;
-                    MessageBox.Show("Vui lòng nhập Username!", "Thông báo",
-                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
+            {         
                 btnConnect.Enabled = false;
                 _client.Connect(txtServerIP.Text.Trim(), (int)numServerPort.Value);
             }
@@ -69,8 +66,11 @@ namespace TCPIP_Collaborative_Chat_System
                 }
 
                 if (message == "Kết nối thành công.")
-            _client.Login(txtUsername.Text.Trim());
+                {
+                    _client.Login(_username, _password);
+                }
             });
+
             _client.OnMessageReceived += message => SafeInvoke(() => UpdateChatContent(message));
             _client.OnDisconnected += () => SafeInvoke(() =>
             {
@@ -96,16 +96,16 @@ namespace TCPIP_Collaborative_Chat_System
             _client.OnUserListUpdated += users => SafeInvoke(() =>
                 UpdateStatus("Online: " + string.Join(", ", users)));
 
-            _client.OnRoomMessage += msg =>
-                SafeInvoke(() =>
+            _client.OnRoomMessage += msg => SafeInvoke(() =>
                 UpdateChatContent(msg));
 
-            _client.OnRoomUserJoined += msg =>
-                SafeInvoke(() =>
+            _client.OnRoomHistory += msg => SafeInvoke(() =>
+                UpdateChatContent(msg));
+
+            _client.OnRoomUserJoined += msg => SafeInvoke(() =>
                 UpdateChatContent("[ROOM] " + msg));
 
-            _client.OnRoomUserLeft += msg =>
-                SafeInvoke(() =>
+            _client.OnRoomUserLeft += msg =>SafeInvoke(() =>
                 UpdateChatContent("[ROOM] " + msg));
 
             _client.OnRoomListReceived += rooms =>
@@ -248,6 +248,7 @@ namespace TCPIP_Collaborative_Chat_System
                 }
             }
 
+            txtChatContent.Clear();
             _client.JoinRoom(roomName, password);
             _currentRoom = room.Name;
         }
@@ -256,23 +257,13 @@ namespace TCPIP_Collaborative_Chat_System
         {
             if (lstRooms.SelectedItem == null)
             {
-                MessageBox.Show(
-                    "Vui lòng chọn phòng",
-                    "Thông báo",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
+                MessageBox.Show("Vui lòng chọn phòng", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            RoomItem room =
-                (RoomItem)lstRooms.SelectedItem;
+            RoomItem room = (RoomItem)lstRooms.SelectedItem;
 
-            if (MessageBox.Show(
-                    $"Bạn có chắc muốn rời phòng '{room.Name}' ?",
-                    "Xác nhận rời phòng",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Question)
-                == DialogResult.Yes)
+            if (MessageBox.Show($"Bạn có chắc muốn rời phòng '{room.Name}' ?", "Xác nhận rời phòng", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
                 _client.LeaveRoom(room.Name);
                 _currentRoom = "";
