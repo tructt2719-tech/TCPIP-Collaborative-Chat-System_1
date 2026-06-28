@@ -344,23 +344,26 @@ namespace TCPIP_Collaborative_Chat_System.Network
                 if (room != null)
                 {
                     lock (room.Members)
-                    {
                         room.Members.Remove(handler);
-                        if (room.Members.Count == 0 && room.Owner != "SYSTEM")
-                        {
-                            lock (_rooms)
-                            {
-                                _rooms.Remove(room);
-                            }
-                        }
-                        BroadcastRoomList();
+                    BroadcastRoomSystem(room, $"{handler.Username} disconected");
+                    BroadcastRoomUserLeft(room, handler.Username);
+                    BroadcastRoomMembersToAll(room);
+                    bool shouldDelete;
+                    lock (room.Members)
+                        shouldDelete = room.Members.Count == 0 && room.Owner != "SYSTEM";
+                    if (shouldDelete)
+                    {
+                        lock (_rooms) _rooms.Remove(room);
+                        OnStatusChanged?.Invoke($"[DELETE] Room '{room.RoomName}' xóa (owner disconect)");
                     }
-                    BroadcastRoomSystem(room, $"{handler.Username} disconnected");
                 }
             }
             handler.Close();
             lock (_clients)
                 _clients.Remove(handler);
+            string UserListPacket = PacketBuilder.BuildUserList(GetOnlineUsernames());
+            BroadcastToLoggedIn(UserListPacket);
+            BroadcastRoomList();
 
             OnClientDisconnected?.Invoke(endpoint);
             OnStatusChanged?.Invoke($"{_clients.Count} client(s) đang kết nối");
@@ -482,6 +485,7 @@ namespace TCPIP_Collaborative_Chat_System.Network
                     SendTo(
                         handler,
                         PacketBuilder.BuildRoomExists(roomName));
+                    SendTo(handler, PacketBuilder.BuildSystem($"Phòng '{roomName}' đã tồn tại"));
 
                     return;
                 }
@@ -494,7 +498,6 @@ namespace TCPIP_Collaborative_Chat_System.Network
                     IsPrivate = isPrivate,
                     Password = password
                 };
-                _roomRepo.AddRoom(room);
                 _rooms.Add(room);
                 OnStatusChanged?.Invoke($"[CREATE] {handler.Username} tạo room {roomName} | Max={maxUsers} | Private={isPrivate}");
                 BroadcastRoomList();
@@ -553,6 +556,7 @@ namespace TCPIP_Collaborative_Chat_System.Network
             SendRoomMembers(handler, room);
             BroadcastRoomSystem(room, $"{handler.Username} joined {roomName}");
             BroadcastRoomUserJoined(room, handler.Username);
+            BroadcastRoomMembersToAll(room);
             BroadcastRoomList();
         }
         private void HandleLeaveRoom(ClientHandler handler, string roomName)
@@ -567,11 +571,24 @@ namespace TCPIP_Collaborative_Chat_System.Network
             {
                 room.Members.Remove(handler);
             }
+            handler.CurrentRoom = null;
             BroadcastRoomUserLeft(room, handler.Username);
             BroadcastRoomList();
+            BroadcastRoomMembersToAll(room);
             handler.CurrentRoom = null;
             SendTo(handler, PacketBuilder.BuildLeaveRoomOk(roomName));
             BroadcastRoomSystem(room, $"{handler.Username} left {roomName}");
+            bool shouldDelete;
+            lock (room.Members)
+                shouldDelete = room.Members.Count == 0 && room.Owner != "SYSTEM";
+
+            if (shouldDelete)
+            {
+                lock (_rooms)
+                    _rooms.Remove(room);
+                OnStatusChanged?.Invoke($"[DELETE] Room '{roomName}' đã bị xóa (rỗng, non-SYSTEM)");
+            }
+            BroadcastRoomList();
             OnStatusChanged?.Invoke($"[LEAVE] {handler.Username} <- {roomName}");
         }
         private void HandleRoomMessage(ClientHandler handler, string roomName, string message)
@@ -699,6 +716,22 @@ namespace TCPIP_Collaborative_Chat_System.Network
                     {
                     }
                 }
+            }
+        }
+        private void BroadcastRoomMembersToAll(ChatRoom room)
+        {
+            List<string> users;
+            lock (room.Members)
+            {
+                users = room.Members.Where(m => m.IsLoggedIn)
+                    .Select(m => m.Username).ToList();
+            }
+            string packet = PacketBuilder.BuildRoomUsers(room.RoomName, users);
+            byte[] buf = Encoding.UTF8.GetBytes(packet);
+            lock (room.Members)
+            {
+                foreach (var m in room.Members)
+                    try { m.Send(buf); } catch { }
             }
         }
     }

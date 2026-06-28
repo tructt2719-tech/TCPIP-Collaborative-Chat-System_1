@@ -76,5 +76,17 @@ namespace TCPIP_Collaborative_Chat_System.Database
                 }
             }
         }
+        public void DeleteNonSystemRooms()
+        {
+            using (var conn = new SQLiteConnection(DatabaseManager.ConnectionString))
+            {
+                conn.Open();
+                using (var cmd = new SQLiteCommand(
+                    "DELETE FROM Rooms WHERE Owner != 'SYSTEM'", conn))
+                {
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
     }
 }
