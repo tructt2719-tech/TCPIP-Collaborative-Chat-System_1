@@ -40,6 +40,11 @@ namespace TCPIP_Collaborative_Chat_System.Shared
         public const string GetRooms = "GET_ROOMS";
         public const string RoomUsers = "ROOM_USERS";
         public const string RoomHistory = "ROOM_HISTORY";
+
+        public const string DeleteRoom = "DELETE_ROOM";       // client ? server
+        public const string DeleteRoomOk = "DELETE_ROOM_OK";   // server ? owner
+        public const string DeleteRoomFail = "DELETE_ROOM_FAIL"; // server ? owner (l?i)
+        public const string RoomDeleted = "ROOM_DELETED";
     }
 
 }

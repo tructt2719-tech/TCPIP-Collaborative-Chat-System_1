@@ -195,6 +195,12 @@ namespace TCPIP_Collaborative_Chat_System.Network
 
                         return;
                     }
+                    if (command == PacketTypes.DeleteRoom && parts.Length >= 2)
+                    {
+                        if (!handler.IsLoggedIn) return;
+                        HandleDeleteRoom(handler, parts[1]);
+                        return;
+                    }
                     if (command == PacketTypes.JoinRoom && parts.Length >= 2)
                     {
                         string roomName = parts[1];
@@ -348,14 +354,6 @@ namespace TCPIP_Collaborative_Chat_System.Network
                     BroadcastRoomSystem(room, $"{handler.Username} disconected");
                     BroadcastRoomUserLeft(room, handler.Username);
                     BroadcastRoomMembersToAll(room);
-                    bool shouldDelete;
-                    lock (room.Members)
-                        shouldDelete = room.Members.Count == 0 && room.Owner != "SYSTEM";
-                    if (shouldDelete)
-                    {
-                        lock (_rooms) _rooms.Remove(room);
-                        OnStatusChanged?.Invoke($"[DELETE] Room '{room.RoomName}' xóa (owner disconect)");
-                    }
                 }
             }
             handler.Close();
@@ -509,6 +507,61 @@ namespace TCPIP_Collaborative_Chat_System.Network
                 OnStatusChanged?.Invoke($"[CREATE] {handler.Username} tạo room {roomName}");
             }
         }
+
+        private void HandleDeleteRoom(ClientHandler handler, string roomName)
+        {
+            ChatRoom room = FindRoom(roomName);
+
+            // Kiểm tra phòng tồn tại
+            if (room == null)
+            {
+                SendTo(handler, PacketBuilder.BuildDeleteRoomFail($"Phòng '{roomName}' không tồn tại"));
+                return;
+            }
+
+            if (room.Owner == "SYSTEM")
+            {
+                SendTo(handler, PacketBuilder.BuildDeleteRoomFail("Không thể xóa phòng hệ thống"));
+                return;
+            }
+
+            // Chỉ chủ phòng mới được xóa
+            if (!room.Owner.Equals(handler.Username, StringComparison.OrdinalIgnoreCase))
+            {
+                SendTo(handler,
+                    PacketBuilder.BuildDeleteRoomFail($"Chỉ chủ phòng ({room.Owner}) mới được xóa"));
+                return;
+            }
+
+            List<ClientHandler> members;
+            lock (room.Members) { members = room.Members.ToList(); }
+
+            // Thông báo ROOM_DELETED cho tất cả thành viên đang ở phòng
+            byte[] deletedBuf = Encoding.UTF8.GetBytes(
+                PacketBuilder.BuildRoomDeleted(roomName, handler.Username));
+            foreach (var m in members)
+            {
+                m.CurrentRoom = null;           
+                try { m.Send(deletedBuf); } catch { }
+            }
+
+            // Xóa khỏi danh sách rooms
+            lock (_rooms) _rooms.Remove(room);
+
+            try { _roomRepo.DeleteRoom(roomName); }
+            catch (Exception ex) { OnStatusChanged?.Invoke($"[DELETE][DB ERROR] {ex.Message}"); }
+
+            // Xác nhận cho chủ phòng
+            SendTo(handler, PacketBuilder.BuildDeleteRoomOk(roomName));
+
+            // Thông báo toàn server
+            BroadcastToLoggedIn(PacketBuilder.BuildSystem(
+                $"Phòng '{roomName}' đã bị xóa bởi {handler.Username}"));
+            BroadcastRoomList();
+
+            OnStatusChanged?.Invoke($"[DELETE] {handler.Username} xóa phòng '{roomName}'");
+        }
+
         private void HandleJoinRoom(ClientHandler handler, string roomName, string password)
         {
             if (!string.IsNullOrEmpty(handler.CurrentRoom))
@@ -547,7 +600,7 @@ namespace TCPIP_Collaborative_Chat_System.Network
             handler.CurrentRoom = roomName;
             OnStatusChanged?.Invoke($"[JOIN] {handler.Username} -> {roomName}");
             SendTo(handler, PacketBuilder.BuildJoinRoomOk(roomName));
-            // Gửi lịch sử chat của phòng
+            
             List<MessageModel> history = MessageRepository.GetMessages(roomName);
             foreach (MessageModel msg in history)
             {
@@ -573,22 +626,11 @@ namespace TCPIP_Collaborative_Chat_System.Network
             }
             handler.CurrentRoom = null;
             BroadcastRoomUserLeft(room, handler.Username);
+            BroadcastRoomSystem(room, $"{handler.Username} left {roomName}");
             BroadcastRoomList();
             BroadcastRoomMembersToAll(room);
-            handler.CurrentRoom = null;
             SendTo(handler, PacketBuilder.BuildLeaveRoomOk(roomName));
-            BroadcastRoomSystem(room, $"{handler.Username} left {roomName}");
-            bool shouldDelete;
-            lock (room.Members)
-                shouldDelete = room.Members.Count == 0 && room.Owner != "SYSTEM";
-
-            if (shouldDelete)
-            {
-                lock (_rooms)
-                    _rooms.Remove(room);
-                OnStatusChanged?.Invoke($"[DELETE] Room '{roomName}' đã bị xóa (rỗng, non-SYSTEM)");
-            }
-            BroadcastRoomList();
+            HandleGetRooms(handler);
             OnStatusChanged?.Invoke($"[LEAVE] {handler.Username} <- {roomName}");
         }
         private void HandleRoomMessage(ClientHandler handler, string roomName, string message)
