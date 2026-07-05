@@ -210,7 +210,7 @@ namespace TCPIP_Collaborative_Chat_System
 
         private void UpdateChatContent(string s)
         {
-            txtChatContent.Text += s + "\r\n";
+            txtChatContent.AppendText(s + "\r\n");
         }
 
         private void btnSendMessage_Click(object sender, EventArgs e)
