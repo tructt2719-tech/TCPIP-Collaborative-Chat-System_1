@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using TCPIP_Collaborative_Chat_System.Shared;
-using TCPIP_Collaborative_Chat_System.Models;
 using TCPIP_Collaborative_Chat_System.Database;
+using TCPIP_Collaborative_Chat_System.Models;
+using TCPIP_Collaborative_Chat_System.Shared;
 
 namespace TCPIP_Collaborative_Chat_System.Network
 {
@@ -28,7 +29,10 @@ namespace TCPIP_Collaborative_Chat_System.Network
         private readonly List<ClientHandler> _clients = new List<ClientHandler>();
         private readonly List<ChatRoom> _rooms = new List<ChatRoom>();
         private readonly RoomRepository _roomRepo = new RoomRepository();
-       
+        private StringBuilder _fileBuffer = new StringBuilder();
+
+        private string _currentFileName = "";
+
         private const int MAX_ROOMS = 20;
         public void Start(int port)
         {
@@ -168,6 +172,124 @@ namespace TCPIP_Collaborative_Chat_System.Network
                     if (parts.Length == 0) return;
 
                     string command = parts[0];
+
+                    //
+                    // FILE_BEGIN
+                    //
+                    if (command == PacketTypes.FileBegin)
+                    {
+                        _currentFileName = parts[1];
+                        long fileSize = long.Parse(parts[2]);
+
+                        _fileBuffer.Clear();
+
+                        OnStatusChanged?.Invoke(
+                            $"Nhận file: {_currentFileName} ({fileSize} bytes)");
+
+                        return;
+                    }
+
+                    //
+                    // FILE_CHUNK
+                    //
+                    if (command == PacketTypes.FileChunk)
+                    {
+                        _fileBuffer.Append(parts[1]);
+
+                        OnStatusChanged?.Invoke("Đã nhận FILE_CHUNK");
+
+                        return;
+                    }
+
+                    //
+                    // FILE_END
+                    //
+                    if (command == PacketTypes.FileEnd)
+                    {
+                        byte[] data =
+                            Convert.FromBase64String(
+                                _fileBuffer.ToString());
+
+                        string folder =
+                            Path.Combine(
+                                Environment.GetFolderPath(
+                                    Environment.SpecialFolder.MyDocuments),
+                                "ReceivedFiles");
+
+                        if (!Directory.Exists(folder))
+                        {
+                            Directory.CreateDirectory(folder);
+                        }
+
+                        string filePath =
+                            Path.Combine(
+                                folder,
+                                _currentFileName);
+
+                        File.WriteAllBytes(filePath, data);
+                        FileRepository.SaveFile(handler.CurrentRoom, handler.Username, _currentFileName, filePath, data.Length);
+                        string packet =
+                            PacketBuilder.BuildFileInfo(
+                                handler.CurrentRoom,
+                                handler.Username,
+                                _currentFileName,
+                                data.Length);
+
+                        OnStatusChanged?.Invoke(
+                            "Room của người gửi = " + handler.CurrentRoom);
+
+                        foreach (ClientHandler client in _clients)
+                        {
+                            OnStatusChanged?.Invoke(
+                                $"{client.Username} room = {client.CurrentRoom}");
+
+                            if (client.CurrentRoom == handler.CurrentRoom)
+                            {
+                                OnStatusChanged?.Invoke(
+                                    $"Send FILE_INFO -> {client.Username}");
+
+                                client.Send(
+                                    Encoding.UTF8.GetBytes(packet));
+                            }
+                        }
+
+                        OnStatusChanged?.Invoke(
+                            "Đã lưu file: " + filePath);
+
+                        return;
+                    }
+                    if (command == PacketTypes.FileDownload)
+                    {
+                        string fileName = parts[1];
+
+                        string path =
+                            FileRepository.GetFilePath(fileName);
+
+                        if (!File.Exists(path))
+                        {
+                            SendTo(handler,
+                                PacketBuilder.BuildSystem("Không tìm thấy file"));
+
+                            return;
+                        }
+
+                        byte[] data =
+                            File.ReadAllBytes(path);
+
+                        string base64 =
+                            Convert.ToBase64String(data);
+
+                        SendTo(
+                            handler,
+                            PacketBuilder.BuildFileData(
+                                fileName,
+                                base64));
+
+                        OnStatusChanged?.Invoke(
+                            "Đã gửi file: " + fileName);
+
+                        return;
+                    }
                     if (command == PacketTypes.CreateRoom && parts.Length >= 4)
                     {
                         string roomName = parts[1];
@@ -327,8 +449,10 @@ namespace TCPIP_Collaborative_Chat_System.Network
                         SocketFlags.None, HandleDataReceived, handler);
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                OnStatusChanged?.Invoke(ex.ToString());
+
                 RemoveClient(handler);
             }
         }

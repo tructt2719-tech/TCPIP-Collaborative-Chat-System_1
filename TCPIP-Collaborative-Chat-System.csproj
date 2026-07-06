@@ -38,7 +38,8 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.SQLite, Version=1.0.119.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
-      <HintPath>..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\lib\net46\System.Data.SQLite.dll</HintPath>
+      <HintPath>packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\lib\net46\System.Data.SQLite.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -53,6 +54,7 @@
   <ItemGroup>
     <Compile Include="Client\SettingsManager.cs" />
     <Compile Include="Database\DatabaseManager.cs" />
+    <Compile Include="Database\FileRepository.cs" />
     <Compile Include="Database\MessageRepository.cs" />
     <Compile Include="Database\PasswordHasher.cs" />
     <Compile Include="Database\RoomRepository.cs" />
@@ -104,6 +106,7 @@
     <Compile Include="Forms\TcpChatServerForm.Designer.cs">
       <DependentUpon>TcpChatServerForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Services\FileTransferService.cs" />
     <Compile Include="Services\MessageService.cs" />
     <Compile Include="Services\UIService.cs" />
     <Compile Include="Shared\EncodingHelper.cs" />
@@ -157,6 +160,7 @@
     <Content Include=".gitignore" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Avatars\" />
     <Folder Include="Extra\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
@@ -165,6 +169,7 @@
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets'))" />
+    <Error Condition="!Exists('packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets'))" />
   </Target>
+  <Import Project="packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets" Condition="Exists('packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets')" />
 </Project>

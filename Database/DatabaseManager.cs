@@ -22,6 +22,7 @@ namespace TCPIP_Collaborative_Chat_System.Database
                 SQLiteConnection.CreateFile(_dbFile);
             }
             CreateTables();
+            UpgradeDatabase();
             CreateDefaultAdmin();
         }
 
@@ -40,6 +41,7 @@ namespace TCPIP_Collaborative_Chat_System.Database
                     PasswordHash TEXT NOT NULL,
                     Role TEXT NOT NULL DEFAULT 'USER',
                     RememberMe INTEGER NOT NULL DEFAULT 0,
+                    Avatar TEXT,
                     CreatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     LastLogin DATETIME
                 );";
@@ -64,15 +66,66 @@ namespace TCPIP_Collaborative_Chat_System.Database
                     Content TEXT,
                     CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
                 );";
+                string createFiles =
+                @"CREATE TABLE IF NOT EXISTS Files
+                (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    RoomName TEXT,
+                    Sender TEXT,
+                    FileName TEXT,
+                    FilePath TEXT,
+                    FileSize INTEGER,
+                    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+                );";
 
                 new SQLiteCommand(createUsers, conn)
                     .ExecuteNonQuery();
 
                 new SQLiteCommand(createRooms, conn)
                     .ExecuteNonQuery();
-
+                new SQLiteCommand(createFiles, conn)
+                    .ExecuteNonQuery();
                 new SQLiteCommand(createMessages, conn)
                     .ExecuteNonQuery();
+            }
+        }
+        private static void UpgradeDatabase()
+        {
+            using (SQLiteConnection conn =
+                new SQLiteConnection(_connectionString))
+            {
+                conn.Open();
+
+                SQLiteCommand cmd =
+                    new SQLiteCommand(
+                        "PRAGMA table_info(Users);",
+                        conn);
+
+                SQLiteDataReader reader =
+                    cmd.ExecuteReader();
+
+                bool hasAvatar = false;
+
+                while (reader.Read())
+                {
+                    if (reader["name"].ToString() == "Avatar")
+                    {
+                        hasAvatar = true;
+                        break;
+                    }
+                }
+
+                reader.Close();
+
+                if (!hasAvatar)
+                {
+                    SQLiteCommand alter =
+                        new SQLiteCommand(
+                            "ALTER TABLE Users ADD COLUMN Avatar TEXT;",
+                            conn);
+
+                    alter.ExecuteNonQuery();
+                }
             }
         }
         private static void CreateDefaultAdmin()
@@ -95,5 +148,6 @@ namespace TCPIP_Collaborative_Chat_System.Database
                 }
             }
         }
+        
     }
 }
