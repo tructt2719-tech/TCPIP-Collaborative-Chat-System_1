@@ -6,7 +6,12 @@ using System.Threading.Tasks;
 
 namespace TCPIP_Collaborative_Chat_System.Models
 {
-    internal class MessageModel
+    public class MessageModel
     {
+        public int Id { get; set; }
+        public string RoomName { get; set; }
+        public string Sender { get; set; }
+        public string Content { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 }

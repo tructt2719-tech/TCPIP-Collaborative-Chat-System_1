@@ -22,11 +22,11 @@ namespace TCPIP_Collaborative_Chat_System.Network
             if (Socket.Connected)
                 Socket.Send(data);
         }
-
         public void Close()
         {
             try { Socket.Shutdown(SocketShutdown.Both); } catch { }
             Socket.Close();
         }
+        public string CurrentRoom { get; set; }
     }
 }

@@ -36,11 +36,25 @@ namespace TCPIP_Collaborative_Chat_System
             this.lblStatus = new System.Windows.Forms.Label();
             this.txtMessage = new System.Windows.Forms.RichTextBox();
             this.btnSendMessage = new System.Windows.Forms.Button();
-            this.txtChatContent = new System.Windows.Forms.RichTextBox();
+            this.pnlChat = new System.Windows.Forms.FlowLayoutPanel();
             this.Username = new System.Windows.Forms.Label();
             this.txtUsername = new System.Windows.Forms.TextBox();
+            this.grpRooms = new System.Windows.Forms.GroupBox();
+            this.txtRoomName = new System.Windows.Forms.TextBox();
+            this.lblRooms = new System.Windows.Forms.TextBox();
+            this.lstRooms = new System.Windows.Forms.ListBox();
+            this.btnCreateRoom = new System.Windows.Forms.Button();
+            this.btnJoinRoom = new System.Windows.Forms.Button();
+            this.btnLeaveRoom = new System.Windows.Forms.Button();
+            this.grpOnlineUsers = new System.Windows.Forms.GroupBox();
+            this.lstOnlineUsers = new System.Windows.Forms.ListBox();
+            this.lblOnline = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.numServerPort)).BeginInit();
+            this.grpRooms.SuspendLayout();
             this.SuspendLayout();
+            this.grpOnlineUsers.SuspendLayout();
+            this.grpOnlineUsers.ResumeLayout(false);
+            this.grpOnlineUsers.PerformLayout();
             // 
             // lblServerIP
             // 
@@ -56,9 +70,9 @@ namespace TCPIP_Collaborative_Chat_System
             this.lblPort.AutoSize = true;
             this.lblPort.Location = new System.Drawing.Point(427, 19);
             this.lblPort.Name = "lblPort";
-            this.lblPort.Size = new System.Drawing.Size(45, 16);
+            this.lblPort.Size = new System.Drawing.Size(34, 16);
             this.lblPort.TabIndex = 1;
-            this.lblPort.Text = "lblPort";
+            this.lblPort.Text = "Port:";
             // 
             // numServerPort
             // 
@@ -84,7 +98,7 @@ namespace TCPIP_Collaborative_Chat_System
             this.txtServerIP.Name = "txtServerIP";
             this.txtServerIP.Size = new System.Drawing.Size(100, 22);
             this.txtServerIP.TabIndex = 2;
-            this.txtServerIP.Text = "127.0.0.1";
+            this.txtServerIP.Text = string.Empty;
             // 
             // btnConnect
             // 
@@ -110,30 +124,33 @@ namespace TCPIP_Collaborative_Chat_System
             // 
             // txtMessage
             // 
-            this.txtMessage.Location = new System.Drawing.Point(12, 526);
+            this.txtMessage.Location = new System.Drawing.Point(12, 521);
             this.txtMessage.Name = "txtMessage";
-            this.txtMessage.Size = new System.Drawing.Size(599, 26);
+            this.txtMessage.Size = new System.Drawing.Size(322, 31);
             this.txtMessage.TabIndex = 6;
             this.txtMessage.Text = "";
             // 
             // btnSendMessage
             // 
-            this.btnSendMessage.Location = new System.Drawing.Point(649, 521);
+            this.btnSendMessage.BackColor = System.Drawing.Color.White;
+            this.btnSendMessage.Location = new System.Drawing.Point(348, 521);
             this.btnSendMessage.Name = "btnSendMessage";
             this.btnSendMessage.Size = new System.Drawing.Size(98, 31);
             this.btnSendMessage.TabIndex = 7;
             this.btnSendMessage.Text = "Gửi tin nhắn";
-            this.btnSendMessage.UseVisualStyleBackColor = true;
+            this.btnSendMessage.UseVisualStyleBackColor = false;
             this.btnSendMessage.Click += new System.EventHandler(this.btnSendMessage_Click);
-            // 
-            // txtChatContent
-            // 
-            this.txtChatContent.Location = new System.Drawing.Point(12, 109);
-            this.txtChatContent.Name = "txtChatContent";
-            this.txtChatContent.Size = new System.Drawing.Size(749, 386);
-            this.txtChatContent.TabIndex = 8;
-            this.txtChatContent.Text = "";
-            this.txtChatContent.TextChanged += new System.EventHandler(this.txtChatContent_TextChanged);
+            //
+            // pnlChat
+            //
+            this.pnlChat.AutoScroll = true;
+            this.pnlChat.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.pnlChat.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
+            this.pnlChat.WrapContents = false;
+            this.pnlChat.Location = new System.Drawing.Point(12, 109);
+            this.pnlChat.Name = "pnlChat";
+            this.pnlChat.Size = new System.Drawing.Size(434, 386);
+            this.pnlChat.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;  
             // 
             // Username
             // 
@@ -152,15 +169,96 @@ namespace TCPIP_Collaborative_Chat_System
             this.txtUsername.Size = new System.Drawing.Size(100, 22);
             this.txtUsername.TabIndex = 10;
             // 
+            // grpRooms
+            // 
+            this.grpRooms.Controls.Add(this.txtRoomName);
+            this.grpRooms.Controls.Add(this.lblRooms);
+            this.grpRooms.Controls.Add(this.lstRooms);
+            this.grpRooms.Location = new System.Drawing.Point(478, 109);
+            this.grpRooms.Name = "grpRooms";
+            this.grpRooms.Size = new System.Drawing.Size(296, 386);
+            this.grpRooms.TabIndex = 11;
+            this.grpRooms.TabStop = false;
+            // 
+            // txtRoomName
+            // 
+            this.txtRoomName.Location = new System.Drawing.Point(18, 331);
+            this.txtRoomName.Name = "txtRoomName";
+            this.txtRoomName.Size = new System.Drawing.Size(247, 22);
+            this.txtRoomName.TabIndex = 7;
+            // 
+            // lblRooms
+            // 
+            this.lblRooms.BackColor = System.Drawing.SystemColors.Info;
+            this.lblRooms.Location = new System.Drawing.Point(96, 6);
+            this.lblRooms.Name = "lblRooms";
+            this.lblRooms.Size = new System.Drawing.Size(100, 22);
+            this.lblRooms.TabIndex = 6;
+            this.lblRooms.Text = "Rooms";
+            this.lblRooms.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.lblRooms.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
+            // 
+            // lstRooms
+            // 
+            this.lstRooms.FormattingEnabled = true;
+            this.lstRooms.ItemHeight = 16;
+            this.lstRooms.Items.AddRange(new object[] {
+            "Study",
+            "Music",
+            "Team",
+            "Gaming",
+            "Work"});
+            this.lstRooms.Location = new System.Drawing.Point(0, 68);
+            this.lstRooms.Name = "lstRooms";
+            this.lstRooms.Size = new System.Drawing.Size(296, 244);
+            this.lstRooms.TabIndex = 0;
+            // 
+            // btnCreateRoom
+            // 
+            this.btnCreateRoom.BackColor = System.Drawing.Color.White;
+            this.btnCreateRoom.ForeColor = System.Drawing.Color.Black;
+            this.btnCreateRoom.Location = new System.Drawing.Point(478, 521);
+            this.btnCreateRoom.Name = "btnCreateRoom";
+            this.btnCreateRoom.Size = new System.Drawing.Size(95, 31);
+            this.btnCreateRoom.TabIndex = 6;
+            this.btnCreateRoom.Text = "Create";
+            this.btnCreateRoom.UseVisualStyleBackColor = false;
+            this.btnCreateRoom.Click += new System.EventHandler(this.btnCreateRoom_Click);
+            // 
+            // btnJoinRoom
+            // 
+            this.btnJoinRoom.Location = new System.Drawing.Point(588, 521);
+            this.btnJoinRoom.Name = "btnJoinRoom";
+            this.btnJoinRoom.Size = new System.Drawing.Size(86, 31);
+            this.btnJoinRoom.TabIndex = 12;
+            this.btnJoinRoom.Text = "Join";
+            this.btnJoinRoom.UseVisualStyleBackColor = true;
+            this.btnJoinRoom.Click += new System.EventHandler(this.btnJoinRoom_Click);
+            // 
+            // btnLeaveRoom
+            // 
+            this.btnLeaveRoom.Location = new System.Drawing.Point(689, 521);
+            this.btnLeaveRoom.Name = "btnLeaveRoom";
+            this.btnLeaveRoom.Size = new System.Drawing.Size(85, 31);
+            this.btnLeaveRoom.TabIndex = 13;
+            this.btnLeaveRoom.Text = "Leave";
+            this.btnLeaveRoom.UseVisualStyleBackColor = true;
+            this.btnLeaveRoom.Click += new System.EventHandler(this.btnLeaveRoom_Click);
+            // 
             // TcpChatClientForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
-            this.ClientSize = new System.Drawing.Size(800, 574);
+            this.ClientSize = new System.Drawing.Size(1000, 574);
+            this.Controls.Add(this.grpOnlineUsers);
+            this.Controls.Add(this.btnLeaveRoom);
+            this.Controls.Add(this.btnJoinRoom);
+            this.Controls.Add(this.btnCreateRoom);
+            this.Controls.Add(this.grpRooms);
             this.Controls.Add(this.txtUsername);
             this.Controls.Add(this.Username);
-            this.Controls.Add(this.txtChatContent);
+            this.Controls.Add(this.pnlChat);
             this.Controls.Add(this.btnSendMessage);
             this.Controls.Add(this.txtMessage);
             this.Controls.Add(this.lblStatus);
@@ -175,6 +273,34 @@ namespace TCPIP_Collaborative_Chat_System
             this.Text = "TcpChatClientForm";
             this.TransparencyKey = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             ((System.ComponentModel.ISupportInitialize)(this.numServerPort)).EndInit();
+            this.grpRooms.ResumeLayout(false);
+            this.grpRooms.PerformLayout();
+            //
+            // grpOnlineUsers
+            //
+            this.grpOnlineUsers.Controls.Add(this.lblOnline);
+            this.grpOnlineUsers.Controls.Add(this.lstOnlineUsers);
+            this.grpOnlineUsers.Location = new System.Drawing.Point(780, 109);
+            this.grpOnlineUsers.Name = "grpOnlineUsers";
+            this.grpOnlineUsers.Size = new System.Drawing.Size(200, 386);
+            this.grpOnlineUsers.TabIndex = 14;
+            this.grpOnlineUsers.TabStop = false;
+
+            //
+            // lblOnline
+            //
+            this.lblOnline.AutoSize = true;
+            this.lblOnline.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            this.lblOnline.Location = new System.Drawing.Point(50, 20);
+            this.lblOnline.Text = "Online Users";
+
+            //
+            // lstOnlineUsers
+            //
+            this.lstOnlineUsers.FormattingEnabled = true;
+            this.lstOnlineUsers.ItemHeight = 16;
+            this.lstOnlineUsers.Location = new System.Drawing.Point(10, 50);
+            this.lstOnlineUsers.Size = new System.Drawing.Size(180, 324);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -190,8 +316,18 @@ namespace TCPIP_Collaborative_Chat_System
         private System.Windows.Forms.Label lblStatus;
         private System.Windows.Forms.RichTextBox txtMessage;
         private System.Windows.Forms.Button btnSendMessage;
-        private System.Windows.Forms.RichTextBox txtChatContent;
+        private System.Windows.Forms.FlowLayoutPanel pnlChat;
         private System.Windows.Forms.Label Username;
         private System.Windows.Forms.TextBox txtUsername;
+        private System.Windows.Forms.GroupBox grpRooms;
+        public System.Windows.Forms.ListBox lstRooms;
+        private System.Windows.Forms.Button btnCreateRoom;
+        private System.Windows.Forms.Button btnJoinRoom;
+        private System.Windows.Forms.Button btnLeaveRoom;
+        private System.Windows.Forms.TextBox lblRooms;
+        private System.Windows.Forms.TextBox txtRoomName;
+        private System.Windows.Forms.GroupBox grpOnlineUsers;
+        public System.Windows.Forms.ListBox lstOnlineUsers;
+        private System.Windows.Forms.Label lblOnline;
     }
 }
