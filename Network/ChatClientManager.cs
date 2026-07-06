@@ -4,6 +4,11 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+<<<<<<< Updated upstream
+=======
+using System.Windows.Forms;
+using TCPIP_Collaborative_Chat_System.Services.Security;
+>>>>>>> Stashed changes
 using TCPIP_Collaborative_Chat_System.Shared;
 
 namespace TCPIP_Collaborative_Chat_System.Network
@@ -82,6 +87,7 @@ namespace TCPIP_Collaborative_Chat_System.Network
             {
                 string packet = PacketBuilder.BuildMessage(senderName, message);
                 byte[] buffer = Encoding.UTF8.GetBytes(packet);
+                buffer = EncryptionService.Encrypt(buffer);
 
                 socket.Send(buffer);
             }
@@ -92,6 +98,19 @@ namespace TCPIP_Collaborative_Chat_System.Network
             }
         }
 
+<<<<<<< Updated upstream
+=======
+        public void SendRoomMessage(string roomName, string message)
+        {
+            if (!IsConnected)
+                return;
+            string packet = $"ROOM_MSG|{roomName}|{message}\n";
+            byte[] data = Encoding.UTF8.GetBytes(packet);
+            data = EncryptionService.Encrypt(data);
+            _socket.Send(data);
+        }
+
+>>>>>>> Stashed changes
         public void Disconnect()
         {
             Socket socket = _socket;
@@ -187,20 +206,29 @@ namespace TCPIP_Collaborative_Chat_System.Network
                     return;
                 }
 
-                string chunk = Encoding.UTF8.GetString(_buffer, 0, size);
+                byte[] encrypted = new byte[size];
+                Array.Copy(_buffer, encrypted, size);
+                byte[] decrypted;
+                try
+                {
+                    decrypted = EncryptionService.Decrypt(encrypted);
+                }
+                catch
+                {
+                    OnStatusChanged?.Invoke( "Decrypt failed");
+                    return;
+                }
+                string chunk = Encoding.UTF8.GetString(decrypted);
                 _receiveBuffer.Append(chunk);
-
                 ProcessReceiveBuffer(line =>
                 {
                     string[] parts = PacketParser.Parse(line);
                     if (parts.Length == 0) return;
-
                     string command = parts[0];
-
                     switch (command)
                     {
                         case "LOGIN_OK":
-                            Username = parts[1];  // THÊM DÒNG NÀY
+                            Username = parts[1];  
                             OnLoginResult?.Invoke("OK:" + parts[1]);
                             break;
 
@@ -297,10 +325,26 @@ namespace TCPIP_Collaborative_Chat_System.Network
         }
         public void Login(string username)
         {
+<<<<<<< Updated upstream
             string packet = $"LOGIN|{username}\n";
             byte[] buffer = Encoding.UTF8.GetBytes(packet);
             try { _socket?.Send(buffer); }
             catch (Exception ex) { OnStatusChanged?.Invoke("Gửi login thất bại: " + ex.Message); }
+=======
+            string hash = PasswordHasher.Hash(password);
+            string packet = $"{PacketTypes.Login}|{username}|{hash}\n";
+            byte[] buffer = Encoding.UTF8.GetBytes(packet);
+            buffer = EncryptionService.Encrypt(buffer);
+            try
+            {
+                _socket?.Send(buffer);
+            }
+            catch (Exception ex)
+            {
+                OnStatusChanged?.Invoke(
+                    "Gửi login thất bại: " + ex.Message);
+            }
+>>>>>>> Stashed changes
         }
 
         private static int IndexOfNewline(StringBuilder builder)
@@ -316,5 +360,52 @@ namespace TCPIP_Collaborative_Chat_System.Network
             return -1;
         }
 
+<<<<<<< Updated upstream
+=======
+            string packet;
+
+            if (isPrivate)
+            {
+                packet =
+                    $"CREATE_ROOM|{roomName}|{maxUsers}|PRIVATE|{password}\n";
+            }
+            else
+            {
+                packet =
+                    $"CREATE_ROOM|{roomName}|{maxUsers}|PUBLIC\n";
+            }
+
+            byte[] data = Encoding.UTF8.GetBytes(packet);
+            data = EncryptionService.Encrypt(data);
+            _socket.Send(data);
+        }
+
+        public void JoinRoom(string roomName, string password = "")
+        {
+            if (!IsConnected)
+                return;
+            string packet = $"JOIN_ROOM|{roomName}|{password}\n";
+            byte[] data = Encoding.UTF8.GetBytes(packet);
+            data = EncryptionService.Encrypt(data);
+            _socket.Send(data);
+        }
+
+        public void LeaveRoom(string roomName)
+        {
+            if (!IsConnected) return;
+            string packet = $"LEAVE_ROOM|{roomName}\n";
+            byte[] data = Encoding.UTF8.GetBytes(packet);
+            data = EncryptionService.Encrypt(data);
+            _socket.Send(data);
+        }
+        public void DeleteRoom(string roomName)
+        {
+            if (!IsConnected) return;
+            string packet = $"DELETE_ROOM|{roomName}\n";
+            byte[] data = Encoding.UTF8.GetBytes(packet);
+            data = EncryptionService.Encrypt(data);
+            _socket.Send(data);
+        }
+>>>>>>> Stashed changes
     }
 }

@@ -46,6 +46,32 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+<<<<<<< Updated upstream
+=======
+    <Compile Include="Client\SettingsManager.cs" />
+    <Compile Include="Database\DatabaseManager.cs" />
+    <Compile Include="Database\MessageRepository.cs" />
+    <Compile Include="Database\RoomRepository.cs" />
+    <Compile Include="Database\UserRepository.cs" />
+    <Compile Include="Forms\CreateRoomForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\CreateRoomForm.Designer.cs">
+      <DependentUpon>CreateRoomForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\LoginForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\LoginForm.Designer.cs">
+      <DependentUpon>LoginForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\RegisterForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\RegisterForm.Designer.cs">
+      <DependentUpon>RegisterForm.cs</DependentUpon>
+    </Compile>
+>>>>>>> Stashed changes
     <Compile Include="Forms\StartupForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -73,6 +99,9 @@
       <DependentUpon>TcpChatServerForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Services\MessageService.cs" />
+    <Compile Include="Services\Security\EncryptionService.cs" />
+    <Compile Include="Services\Security\PasswordHasher.cs" />
+    <Compile Include="Services\Security\SecurityConfig.cs" />
     <Compile Include="Services\UIService.cs" />
     <Compile Include="Shared\EncodingHelper.cs" />
     <Compile Include="Shared\PacketBuilder.cs" />
