@@ -77,5 +77,50 @@ namespace TCPIP_Collaborative_Chat_System.Database
                 cmd.ExecuteNonQuery();
             }
         }
+        public static void UpdateAvatar(string username, string avatarPath)
+        {
+            using (SQLiteConnection conn =
+                new SQLiteConnection(DatabaseManager.ConnectionString))
+            {
+                conn.Open();
+
+                string sql =
+                @"UPDATE Users
+          SET Avatar=@avatar
+          WHERE Username=@username;";
+
+                SQLiteCommand cmd =
+                    new SQLiteCommand(sql, conn);
+
+                cmd.Parameters.AddWithValue("@avatar", avatarPath);
+                cmd.Parameters.AddWithValue("@username", username);
+
+                cmd.ExecuteNonQuery();
+            }
+        }
+        public static string GetAvatar(string username)
+        {
+            using (SQLiteConnection conn = new SQLiteConnection(DatabaseManager.ConnectionString))
+            {
+                conn.Open();
+
+                string sql =
+                @"SELECT Avatar
+          FROM Users
+          WHERE Username=@username;";
+
+                SQLiteCommand cmd =
+                    new SQLiteCommand(sql, conn);
+
+                cmd.Parameters.AddWithValue("@username", username);
+
+                object result = cmd.ExecuteScalar();
+
+                if (result == null)
+                    return "";
+
+                return result.ToString();
+            }
+        }
     }
 }

@@ -40,6 +40,13 @@ namespace TCPIP_Collaborative_Chat_System.Shared
         public const string GetRooms = "GET_ROOMS";
         public const string RoomUsers = "ROOM_USERS";
         public const string RoomHistory = "ROOM_HISTORY";
+        public const string FileBegin = "FILE_BEGIN";
+        public const string FileChunk = "FILE_CHUNK";
+        public const string FileEnd = "FILE_END";
+        public const string FileInfo = "FILE_INFO";
+        public const string FileDownload = "FILE_DOWNLOAD";
+        public const string FileData = "FILE_DATA";
+
     }
 
 }

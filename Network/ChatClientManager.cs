@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Windows.Forms;
 using TCPIP_Collaborative_Chat_System.Shared;
+using System.IO;
 
 namespace TCPIP_Collaborative_Chat_System.Network
 {
@@ -26,7 +27,8 @@ namespace TCPIP_Collaborative_Chat_System.Network
         public event Action<string> OnRoomUserLeft;
         public event Action<string> OnRoomHistory;
         public event Action<List<string>> OnRoomListReceived;
-
+        public event Action<string, string, string, long> OnFileReceived;
+        public event Action<string, byte[]> OnFileDataReceived;
 
         private Socket _socket;
         private readonly byte[] _buffer = new byte[1024];
@@ -299,7 +301,44 @@ namespace TCPIP_Collaborative_Chat_System.Network
                                 OnRoomListReceived?.Invoke(rooms);
                                 break;
                             }
-                    
+                        case PacketTypes.FileInfo:
+                            {
+                                string room = parts[1];
+                                string sender = parts[2];
+                                string fileName = parts[3];
+
+                                long fileSize = 0;
+                                long.TryParse(parts[4], out fileSize);
+
+                                OnMessageReceived?.Invoke(
+                                    $"{sender} đã gửi file: {fileName}");
+
+                                OnFileReceived?.Invoke(
+                                    room,
+                                    sender,
+                                    fileName,
+                                    fileSize);
+
+                                break;
+                            }
+                        case PacketTypes.FileData:
+                            {
+                                if (parts.Length < 3)
+                                    break;
+
+                                string fileName = parts[1];
+
+                                string base64 = parts[2];
+
+                                byte[] data =
+                                    Convert.FromBase64String(base64);
+
+                                OnFileDataReceived?.Invoke(
+                                    fileName,
+                                    data);
+
+                                break;
+                            }
                     }
                 });
 
@@ -315,8 +354,9 @@ namespace TCPIP_Collaborative_Chat_System.Network
                         socket);
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                MessageBox.Show(ex.ToString());
                 HandleDisconnected(socket);
             }
         }
@@ -437,5 +477,42 @@ namespace TCPIP_Collaborative_Chat_System.Network
             string packet = $"LEAVE_ROOM|{roomName}\n";
             _socket.Send(Encoding.UTF8.GetBytes(packet));
         }
+        public void SendFile(string filePath)
+        {
+            if (!File.Exists(filePath))
+                return;
+
+            byte[] fileData = File.ReadAllBytes(filePath);
+
+            string fileName = Path.GetFileName(filePath);
+
+            string header =
+                $"{PacketTypes.FileBegin}|{fileName}|{fileData.Length}\n";
+
+            _socket.Send(Encoding.UTF8.GetBytes(header));
+            string base64 = Convert.ToBase64String(fileData);
+
+            string chunk =
+                $"{PacketTypes.FileChunk}|{base64}\n";
+
+            _socket.Send(
+                Encoding.UTF8.GetBytes(chunk));
+            string end = $"{PacketTypes.FileEnd}\n";
+
+            _socket.Send(
+                Encoding.UTF8.GetBytes(end));
+        }
+        public void DownloadFile(string fileName)
+        {
+            if (!IsConnected)
+                return;
+
+            string packet =
+                PacketBuilder.BuildFileDownload(fileName);
+
+            _socket.Send(
+                Encoding.UTF8.GetBytes(packet));
+        }
+
     }
 }
