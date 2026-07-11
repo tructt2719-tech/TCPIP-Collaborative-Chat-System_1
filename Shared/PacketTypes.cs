@@ -45,6 +45,13 @@ namespace TCPIP_Collaborative_Chat_System.Shared
         public const string DeleteRoomOk = "DELETE_ROOM_OK";   // server ? owner
         public const string DeleteRoomFail = "DELETE_ROOM_FAIL"; // server ? owner (l?i)
         public const string RoomDeleted = "ROOM_DELETED";
+        public const string FileBegin = "FILE_BEGIN";
+        public const string FileChunk = "FILE_CHUNK";
+        public const string FileEnd = "FILE_END";
+        public const string FileInfo = "FILE_INFO";
+        public const string FileDownload = "FILE_DOWNLOAD";
+        public const string FileData = "FILE_DATA";
+
     }
 
 }

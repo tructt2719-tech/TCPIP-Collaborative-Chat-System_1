@@ -47,14 +47,20 @@ namespace TCPIP_Collaborative_Chat_System
             this.btnJoinRoom = new System.Windows.Forms.Button();
             this.btnLeaveRoom = new System.Windows.Forms.Button();
             this.btnDeleteRoom = new System.Windows.Forms.Button();
+            this.btnSendFile = new System.Windows.Forms.Button();
+            this.flpEmoji = new System.Windows.Forms.FlowLayoutPanel();
+            this.btnEmoji = new System.Windows.Forms.Button();
+            this.picAvatar = new System.Windows.Forms.PictureBox();
+            this.btnChangeAvatar = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.numServerPort)).BeginInit();
             this.grpRooms.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picAvatar)).BeginInit();
             this.SuspendLayout();
             // 
             // lblServerIP
             // 
             this.lblServerIP.AutoSize = true;
-            this.lblServerIP.Location = new System.Drawing.Point(24, 19);
+            this.lblServerIP.Location = new System.Drawing.Point(12, 19);
             this.lblServerIP.Name = "lblServerIP";
             this.lblServerIP.Size = new System.Drawing.Size(62, 16);
             this.lblServerIP.TabIndex = 0;
@@ -118,9 +124,10 @@ namespace TCPIP_Collaborative_Chat_System
             // 
             // txtMessage
             // 
-            this.txtMessage.Location = new System.Drawing.Point(12, 521);
+            this.txtMessage.Location = new System.Drawing.Point(63, 521);
             this.txtMessage.Name = "txtMessage";
             this.txtMessage.Size = new System.Drawing.Size(291, 31);
+            this.txtMessage.Size = new System.Drawing.Size(279, 31);
             this.txtMessage.TabIndex = 6;
             this.txtMessage.Text = "";
             // 
@@ -137,9 +144,9 @@ namespace TCPIP_Collaborative_Chat_System
             // 
             // txtChatContent
             // 
-            this.txtChatContent.Location = new System.Drawing.Point(12, 109);
+            this.txtChatContent.Location = new System.Drawing.Point(12, 143);
             this.txtChatContent.Name = "txtChatContent";
-            this.txtChatContent.Size = new System.Drawing.Size(434, 386);
+            this.txtChatContent.Size = new System.Drawing.Size(434, 302);
             this.txtChatContent.TabIndex = 8;
             this.txtChatContent.Text = "";
             this.txtChatContent.TextChanged += new System.EventHandler(this.txtChatContent_TextChanged);
@@ -252,12 +259,68 @@ namespace TCPIP_Collaborative_Chat_System
             this.btnDeleteRoom.UseVisualStyleBackColor = false;
             this.btnDeleteRoom.Click += new System.EventHandler(this.btnDeleteRoom_Click);
             // 
+            // btnSendFile
+            // 
+            this.btnSendFile.Location = new System.Drawing.Point(348, 473);
+            this.btnSendFile.Name = "btnSendFile";
+            this.btnSendFile.Size = new System.Drawing.Size(98, 32);
+            this.btnSendFile.TabIndex = 14;
+            this.btnSendFile.Text = "Send File";
+            this.btnSendFile.UseVisualStyleBackColor = true;
+            this.btnSendFile.Click += new System.EventHandler(this.btnSendFile_Click);
+            // 
+            // flpEmoji
+            // 
+            this.flpEmoji.AutoSize = true;
+            this.flpEmoji.Location = new System.Drawing.Point(12, 473);
+            this.flpEmoji.Name = "flpEmoji";
+            this.flpEmoji.Size = new System.Drawing.Size(330, 32);
+            this.flpEmoji.TabIndex = 15;
+            this.flpEmoji.Visible = false;
+            this.flpEmoji.Paint += new System.Windows.Forms.PaintEventHandler(this.flowLayoutPanel1_Paint);
+            // 
+            // btnEmoji
+            // 
+            this.btnEmoji.ForeColor = System.Drawing.Color.DarkGoldenrod;
+            this.btnEmoji.Location = new System.Drawing.Point(14, 521);
+            this.btnEmoji.Name = "btnEmoji";
+            this.btnEmoji.Size = new System.Drawing.Size(43, 31);
+            this.btnEmoji.TabIndex = 16;
+            this.btnEmoji.Text = "😊";
+            this.btnEmoji.UseVisualStyleBackColor = true;
+            this.btnEmoji.Click += new System.EventHandler(this.btnEmoji_Click);
+            // 
+            // picAvatar
+            // 
+            this.picAvatar.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.picAvatar.Location = new System.Drawing.Point(129, 91);
+            this.picAvatar.Name = "picAvatar";
+            this.picAvatar.Size = new System.Drawing.Size(85, 46);
+            this.picAvatar.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.picAvatar.TabIndex = 17;
+            this.picAvatar.TabStop = false;
+            // 
+            // btnChangeAvatar
+            // 
+            this.btnChangeAvatar.Location = new System.Drawing.Point(11, 109);
+            this.btnChangeAvatar.Name = "btnChangeAvatar";
+            this.btnChangeAvatar.Size = new System.Drawing.Size(112, 28);
+            this.btnChangeAvatar.TabIndex = 18;
+            this.btnChangeAvatar.Text = "Change Avatar";
+            this.btnChangeAvatar.UseVisualStyleBackColor = true;
+            this.btnChangeAvatar.Click += new System.EventHandler(this.btnChangeAvatar_Click);
+            // 
             // TcpChatClientForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
             this.ClientSize = new System.Drawing.Size(800, 574);
+            this.Controls.Add(this.btnChangeAvatar);
+            this.Controls.Add(this.picAvatar);
+            this.Controls.Add(this.btnEmoji);
+            this.Controls.Add(this.flpEmoji);
+            this.Controls.Add(this.btnSendFile);
             this.Controls.Add(this.btnLeaveRoom);
             this.Controls.Add(this.btnJoinRoom);
             this.Controls.Add(this.btnCreateRoom);
@@ -282,6 +345,7 @@ namespace TCPIP_Collaborative_Chat_System
             ((System.ComponentModel.ISupportInitialize)(this.numServerPort)).EndInit();
             this.grpRooms.ResumeLayout(false);
             this.grpRooms.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picAvatar)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -308,5 +372,10 @@ namespace TCPIP_Collaborative_Chat_System
         private System.Windows.Forms.Button btnDeleteRoom;
         private System.Windows.Forms.TextBox lblRooms;
         private System.Windows.Forms.TextBox txtRoomName;
+        private System.Windows.Forms.Button btnSendFile;
+        private System.Windows.Forms.FlowLayoutPanel flpEmoji;
+        private System.Windows.Forms.Button btnEmoji;
+        private System.Windows.Forms.PictureBox picAvatar;
+        private System.Windows.Forms.Button btnChangeAvatar;
     }
 }

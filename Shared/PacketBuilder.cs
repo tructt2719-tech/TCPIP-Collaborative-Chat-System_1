@@ -86,5 +86,21 @@ namespace TCPIP_Collaborative_Chat_System.Shared
         public static string BuildRoomDeleted(string roomName, string deletedBy)
             => $"ROOM_DELETED|{roomName}|{deletedBy}\n";
 
+        public static string BuildFileInfo(
+            string roomName,
+            string sender,
+            string fileName,
+            long fileSize)
+        {
+            return $"FILE_INFO|{roomName}|{sender}|{fileName}|{fileSize}\n";
+        }
+        public static string BuildFileDownload(string fileName)
+        {
+            return $"FILE_DOWNLOAD|{fileName}\n";
+        }
+        public static string BuildFileData(string fileName, string base64)
+        {
+            return $"FILE_DATA|{fileName}|{base64}\n";
+        }
     }
 }

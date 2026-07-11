@@ -1,10 +1,13 @@
 using System;
+using System.IO;
 using System.Net;
 using System.Windows.Forms;
 using TCPIP_Collaborative_Chat_System.Client;
+using TCPIP_Collaborative_Chat_System.Database;
 using TCPIP_Collaborative_Chat_System.Forms;
 using TCPIP_Collaborative_Chat_System.Models;
 using TCPIP_Collaborative_Chat_System.Network;
+using System.Drawing;
 
 namespace TCPIP_Collaborative_Chat_System
 {
@@ -17,6 +20,8 @@ namespace TCPIP_Collaborative_Chat_System
         public TcpChatClientForm(string username, string password, bool remember)
         {
             InitializeComponent();
+            CreateEmojiButtons();
+            LoadAvatar();
             _username = username;
             _password = password;
             _remember = remember;
@@ -42,9 +47,85 @@ namespace TCPIP_Collaborative_Chat_System
                 numServerPort.Value = p;
             }
         }
+        private void CreateEmojiButtons()
+        {
+            flpEmoji.Controls.Clear();
 
+            foreach (string emoji in _emojis)
+            {
+                Button btn = new Button();
+
+                btn.Width = 40;
+                btn.Height = 40;
+
+                btn.Text = emoji;
+
+                btn.Click += (s, e) =>
+                {
+                    txtMessage.Text += emoji;
+
+                    txtMessage.Focus();
+
+                    txtMessage.SelectionStart =
+                        txtMessage.Text.Length;
+                };
+
+                flpEmoji.Controls.Add(btn);
+            }
+        }
         private readonly ChatClientManager _client = new ChatClientManager();
+        private readonly string[] _emojis =
+            {
+                "😀",
+                "😁",
+                "😂",
+                "🤣",
+                "😍",
+                "🥰",
+                "😎",
+                "😭",
+                "❤️",
+                "👍",
+                "👏",
+                "🔥"
+            };
+        private void LoadAvatar()
+        {
+            string relativePath =
+                UserRepository.GetAvatar(_username);
 
+            string fullPath;
+
+            if (string.IsNullOrWhiteSpace(relativePath))
+            {
+                fullPath = Path.Combine(
+                    Application.StartupPath,
+                    "Avatars",
+                    "default.png");
+            }
+            else
+            {
+                fullPath = Path.Combine(
+                    Application.StartupPath,
+                    relativePath);
+            }
+
+            if (!File.Exists(fullPath))
+            {
+                fullPath = Path.Combine(
+                    Application.StartupPath,
+                    "Avatars",
+                    "default.png");
+            }
+
+            if (picAvatar.Image != null)
+            {
+                picAvatar.Image.Dispose();
+                picAvatar.Image = null;
+            }
+
+            picAvatar.Image = Image.FromFile(fullPath);
+        }
         private void btnConnect_Click(object sender, EventArgs e)
         {
             if (_client.IsConnected)
@@ -138,14 +219,54 @@ namespace TCPIP_Collaborative_Chat_System
 
             _client.OnRoomHistory += msg => SafeInvoke(() =>
                 UpdateChatContent(msg));
-
             _client.OnRoomUserJoined += msg => SafeInvoke(() =>
                 UpdateChatContent("[ROOM] " + msg));
 
             _client.OnRoomUserLeft += msg =>SafeInvoke(() =>
                 UpdateChatContent("[ROOM] " + msg));
+            _client.OnFileReceived +=
+                (room, sender, fileName, size) =>
+                {
+                    SafeInvoke(() =>
+                    {
+                        DialogResult result =
+                            MessageBox.Show(
+                                $"{sender} vừa gửi file:\n\n" +
+                                $"{fileName}\n" +
+                                $"({size} bytes)\n\n" +
+                                "Bạn có muốn tải không?",
+                                "Nhận file",
+                                MessageBoxButtons.YesNo,
+                                MessageBoxIcon.Question);
 
-            _client.OnRoomListReceived += rooms =>
+                        if (result == DialogResult.Yes)
+                        {
+                            _client.DownloadFile(fileName);
+                        }
+                    });
+                };
+            _client.OnFileDataReceived +=
+                (fileName, data) =>
+                {
+                    SafeInvoke(() =>
+                    {
+                        SaveFileDialog dlg =
+                            new SaveFileDialog();
+
+                        dlg.FileName = fileName;
+
+                        if (dlg.ShowDialog() == DialogResult.OK)
+                        {
+                            File.WriteAllBytes(
+                                dlg.FileName,
+                                data);
+
+                            MessageBox.Show(
+                                "Đã tải file thành công!");
+                        }
+                    });
+                };
+                            _client.OnRoomListReceived += rooms =>
             {
                 SafeInvoke(() =>
                 {
@@ -319,6 +440,73 @@ namespace TCPIP_Collaborative_Chat_System
                 _client.LeaveRoom(room.Name);
                 _currentRoom = "";
             }
+        }
+        private void btnSendFile_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog();
+
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                _client.SendFile(dlg.FileName);
+            }
+        }
+        private void flowLayoutPanel1_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void btnEmoji_Click(object sender, EventArgs e)
+        {
+            flpEmoji.Visible = !flpEmoji.Visible;
+        }
+
+        private void btnChangeAvatar_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog();
+            dlg.Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp";
+            if (dlg.ShowDialog() != DialogResult.OK)
+                return;
+            string avatarFolder =
+                Path.Combine(
+                    Application.StartupPath,
+                    "Avatars");
+
+            if (!Directory.Exists(avatarFolder))
+            {
+                Directory.CreateDirectory(
+                    avatarFolder);
+            }
+
+            string extension =
+                Path.GetExtension(dlg.FileName);
+
+            string newFileName =
+                _username + extension;
+
+            string destination =
+                Path.Combine(
+                    avatarFolder,
+                    newFileName);
+
+            File.Copy(
+                dlg.FileName,
+                destination,
+                true);
+
+           string relativePath = Path.Combine("Avatars", newFileName);
+            UserRepository.UpdateAvatar(_username, relativePath);
+            if (picAvatar.Image != null)
+            {
+                picAvatar.Image.Dispose();
+                picAvatar.Image = null;
+            }
+            picAvatar.Image = Image.FromFile(destination);
+            MessageBox.Show("Đổi Avatar thành công!");
+        }
+
+        private void lblReplySender_Click(object sender, EventArgs e)
+        {
+
         }
         private void btnDeleteRoom_Click(object sender, EventArgs e)
         {
