@@ -286,6 +286,30 @@ namespace TCPIP_Collaborative_Chat_System
                     }
                 });
             };
+            _client.OnDeleteRoomResult += result => SafeInvoke(() =>
+            {
+                if (result.StartsWith("OK:"))
+                {
+                    string roomName = result.Substring(3);
+                    _currentRoom = "";
+                    UpdateChatContent($"Phòng '{roomName}' đã xóa thành công");
+                }
+                else
+                {
+                    string reason = result.Length > 5 ? result.Substring(5) : result;
+                    MessageBox.Show(reason, "Không thể xóa phòng", MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                }
+            });
+            _client.OnRoomDeleted += roomName => SafeInvoke(() =>
+            {
+                if (_currentRoom == roomName)
+                    _currentRoom = "";
+
+                txtChatContent.Clear();
+                UpdateChatContent($"Phòng '{roomName}' đã bị chủ phòng xóa");
+                UpdateStatus($"Phòng '{roomName}' đã bị xóa");
+            });
 
         }
         private void SafeInvoke(Action action)
@@ -307,7 +331,7 @@ namespace TCPIP_Collaborative_Chat_System
 
         private void UpdateChatContent(string s)
         {
-            txtChatContent.Text += s + "\r\n";
+            txtChatContent.AppendText(s + "\r\n");
         }
 
         private void btnSendMessage_Click(object sender, EventArgs e)
@@ -483,6 +507,21 @@ namespace TCPIP_Collaborative_Chat_System
         private void lblReplySender_Click(object sender, EventArgs e)
         {
 
+        }
+        private void btnDeleteRoom_Click(object sender, EventArgs e)
+        {
+            if (lstRooms.SelectedItem == null)
+            {
+                MessageBox.Show("Vui lòng chọn phòng muốn xóa!", "Thông báo",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            RoomItem room = (RoomItem)lstRooms.SelectedItem;
+            var confirm = MessageBox.Show($"Bạn có muốn xóa phòng \"{room.Name}\" không?\n\n" +
+                "Yes\n" + "No", "Xác nhận xóa phòng", MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
+            if (confirm == DialogResult.Yes)
+                _client.DeleteRoom(room.Name);
         }
     }
 }

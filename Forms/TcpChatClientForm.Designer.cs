@@ -46,6 +46,7 @@ namespace TCPIP_Collaborative_Chat_System
             this.btnCreateRoom = new System.Windows.Forms.Button();
             this.btnJoinRoom = new System.Windows.Forms.Button();
             this.btnLeaveRoom = new System.Windows.Forms.Button();
+            this.btnDeleteRoom = new System.Windows.Forms.Button();
             this.btnSendFile = new System.Windows.Forms.Button();
             this.flpEmoji = new System.Windows.Forms.FlowLayoutPanel();
             this.btnEmoji = new System.Windows.Forms.Button();
@@ -125,6 +126,7 @@ namespace TCPIP_Collaborative_Chat_System
             // 
             this.txtMessage.Location = new System.Drawing.Point(63, 521);
             this.txtMessage.Name = "txtMessage";
+            this.txtMessage.Size = new System.Drawing.Size(291, 31);
             this.txtMessage.Size = new System.Drawing.Size(279, 31);
             this.txtMessage.TabIndex = 6;
             this.txtMessage.Text = "";
@@ -132,7 +134,7 @@ namespace TCPIP_Collaborative_Chat_System
             // btnSendMessage
             // 
             this.btnSendMessage.BackColor = System.Drawing.Color.White;
-            this.btnSendMessage.Location = new System.Drawing.Point(348, 521);
+            this.btnSendMessage.Location = new System.Drawing.Point(318, 521);
             this.btnSendMessage.Name = "btnSendMessage";
             this.btnSendMessage.Size = new System.Drawing.Size(98, 31);
             this.btnSendMessage.TabIndex = 7;
@@ -214,7 +216,7 @@ namespace TCPIP_Collaborative_Chat_System
             // 
             this.btnCreateRoom.BackColor = System.Drawing.Color.White;
             this.btnCreateRoom.ForeColor = System.Drawing.Color.Black;
-            this.btnCreateRoom.Location = new System.Drawing.Point(478, 521);
+            this.btnCreateRoom.Location = new System.Drawing.Point(422, 521);
             this.btnCreateRoom.Name = "btnCreateRoom";
             this.btnCreateRoom.Size = new System.Drawing.Size(95, 31);
             this.btnCreateRoom.TabIndex = 6;
@@ -224,7 +226,7 @@ namespace TCPIP_Collaborative_Chat_System
             // 
             // btnJoinRoom
             // 
-            this.btnJoinRoom.Location = new System.Drawing.Point(588, 521);
+            this.btnJoinRoom.Location = new System.Drawing.Point(523, 521);
             this.btnJoinRoom.Name = "btnJoinRoom";
             this.btnJoinRoom.Size = new System.Drawing.Size(86, 31);
             this.btnJoinRoom.TabIndex = 12;
@@ -234,13 +236,28 @@ namespace TCPIP_Collaborative_Chat_System
             // 
             // btnLeaveRoom
             // 
-            this.btnLeaveRoom.Location = new System.Drawing.Point(689, 521);
+            this.btnLeaveRoom.Location = new System.Drawing.Point(615, 521);
             this.btnLeaveRoom.Name = "btnLeaveRoom";
             this.btnLeaveRoom.Size = new System.Drawing.Size(85, 31);
             this.btnLeaveRoom.TabIndex = 13;
             this.btnLeaveRoom.Text = "Leave";
             this.btnLeaveRoom.UseVisualStyleBackColor = true;
             this.btnLeaveRoom.Click += new System.EventHandler(this.btnLeaveRoom_Click);
+            // 
+            // btnDeleteRoom
+            // 
+            this.btnDeleteRoom.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(53)))), ((int)(((byte)(69)))));
+            this.btnDeleteRoom.FlatAppearance.BorderSize = 0;
+            this.btnDeleteRoom.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnDeleteRoom.Font = new System.Drawing.Font("Segoe UI", 8.5F, System.Drawing.FontStyle.Bold);
+            this.btnDeleteRoom.ForeColor = System.Drawing.Color.White;
+            this.btnDeleteRoom.Location = new System.Drawing.Point(706, 521);
+            this.btnDeleteRoom.Name = "btnDeleteRoom";
+            this.btnDeleteRoom.Size = new System.Drawing.Size(82, 31);
+            this.btnDeleteRoom.TabIndex = 14;
+            this.btnDeleteRoom.Text = "🗑 Xóa phòng";
+            this.btnDeleteRoom.UseVisualStyleBackColor = false;
+            this.btnDeleteRoom.Click += new System.EventHandler(this.btnDeleteRoom_Click);
             // 
             // btnSendFile
             // 
@@ -307,6 +324,7 @@ namespace TCPIP_Collaborative_Chat_System
             this.Controls.Add(this.btnLeaveRoom);
             this.Controls.Add(this.btnJoinRoom);
             this.Controls.Add(this.btnCreateRoom);
+            this.Controls.Add(this.btnDeleteRoom);
             this.Controls.Add(this.grpRooms);
             this.Controls.Add(this.txtUsername);
             this.Controls.Add(this.Username);
@@ -351,6 +369,7 @@ namespace TCPIP_Collaborative_Chat_System
         private System.Windows.Forms.Button btnCreateRoom;
         private System.Windows.Forms.Button btnJoinRoom;
         private System.Windows.Forms.Button btnLeaveRoom;
+        private System.Windows.Forms.Button btnDeleteRoom;
         private System.Windows.Forms.TextBox lblRooms;
         private System.Windows.Forms.TextBox txtRoomName;
         private System.Windows.Forms.Button btnSendFile;

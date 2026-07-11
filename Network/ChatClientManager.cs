@@ -18,7 +18,7 @@ namespace TCPIP_Collaborative_Chat_System.Network
         public event Action<string> OnStatusChanged;
         public event Action<string> OnMessageReceived;
         public event Action OnDisconnected;
-        public event Action<string> OnLoginResult;   
+        public event Action<string> OnLoginResult;
         public event Action<string> OnSystemMessage;
         public event Action<List<string>> OnUserListUpdated;
         public event Action<string> OnRoomMessage;
@@ -27,6 +27,8 @@ namespace TCPIP_Collaborative_Chat_System.Network
         public event Action<string> OnRoomUserLeft;
         public event Action<string> OnRoomHistory;
         public event Action<List<string>> OnRoomListReceived;
+        public event Action<string> OnDeleteRoomResult;
+        public event Action<string> OnRoomDeleted;
         public event Action<string, string, string, long> OnFileReceived;
         public event Action<string, byte[]> OnFileDataReceived;
 
@@ -301,6 +303,18 @@ namespace TCPIP_Collaborative_Chat_System.Network
                                 OnRoomListReceived?.Invoke(rooms);
                                 break;
                             }
+                        case "DELETE_ROOM_OK":
+                            OnDeleteRoomResult?.Invoke(
+                                "OK:" + (parts.Length > 1 ? parts[1] : ""));
+                            break;
+                        case "DELETE_ROOM_FAIL":
+                            OnDeleteRoomResult?.Invoke(
+                                "FAIL:" + (parts.Length > 1 ? parts[1] : ""));
+                            break;
+                        case "ROOM_DELETED":
+                            if (parts.Length >= 2)
+                                OnRoomDeleted?.Invoke(parts[1]);
+                            break;
                         case PacketTypes.FileInfo:
                             {
                                 string room = parts[1];
@@ -475,6 +489,12 @@ namespace TCPIP_Collaborative_Chat_System.Network
         {
             if (!IsConnected) return;
             string packet = $"LEAVE_ROOM|{roomName}\n";
+            _socket.Send(Encoding.UTF8.GetBytes(packet));
+        }
+        public void DeleteRoom(string roomName)
+        {
+            if (!IsConnected) return;
+            string packet = $"DELETE_ROOM|{roomName}\n";
             _socket.Send(Encoding.UTF8.GetBytes(packet));
         }
         public void SendFile(string filePath)

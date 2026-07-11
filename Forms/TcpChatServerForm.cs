@@ -64,19 +64,26 @@ namespace TCPIP_Collaborative_Chat_System
         }
         private void WireServerEvents()
         {
-            _server.OnStatusChanged += status => SafeInvoke(() => UpdateStatus(status));
+            _server.OnStatusChanged += status => SafeInvoke(() =>
+            {
+                UpdateStatus(status);
+                UpdateChatContent(status);
+            });
+            
             _server.OnMessageReceived += message => SafeInvoke(() => UpdateChatContent(message));
             _server.OnClientConnected += endpoint =>
                 SafeInvoke(() =>
                 {
                     _clientCount++;
                     UpdateStatus($"Client connected: {endpoint}");
+                    UpdateChatContent($"Client connected: {endpoint}");
                 });
             _server.OnClientDisconnected += endpoint =>
                 SafeInvoke(() =>
                 {
                     _clientCount = Math.Max(0, _clientCount - 1);
                     UpdateStatus($"Client disconnected: {endpoint}");
+                    UpdateChatContent($"Client disconnected: {endpoint}");
                 });
         }
 
@@ -143,7 +150,7 @@ namespace TCPIP_Collaborative_Chat_System
 
         private void UpdateChatContent(string s)
         {
-            txtChatContent.Text += s + "\r\n";
+            txtChatContent.AppendText(s + "\r\n");
         }
 
         protected override void OnFormClosed(FormClosedEventArgs e)

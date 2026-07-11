@@ -76,6 +76,16 @@ namespace TCPIP_Collaborative_Chat_System.Shared
         {
             return $"ROOM_HISTORY|{roomName}|{sender}|{content}|{time}\n";
         }
+
+        public static string BuildDeleteRoomOk(string roomName)
+            => $"DELETE_ROOM_OK|{roomName}\n";
+
+        public static string BuildDeleteRoomFail(string reason)
+            => $"DELETE_ROOM_FAIL|{reason}\n";
+
+        public static string BuildRoomDeleted(string roomName, string deletedBy)
+            => $"ROOM_DELETED|{roomName}|{deletedBy}\n";
+
         public static string BuildFileInfo(
             string roomName,
             string sender,
