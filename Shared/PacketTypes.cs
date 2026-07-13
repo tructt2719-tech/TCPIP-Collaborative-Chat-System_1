@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,8 +17,8 @@ namespace TCPIP_Collaborative_Chat_System.Shared
 
         public const string Message = "MESSAGE";
         public const string Disconnect = "DISCONNECT";
-        public const string System = "SYSTEM";      // thông báo user join/leave
-        public const string UserList = "USER_LIST";   // danh sách online
+        public const string System = "SYSTEM";      // thong bao user join/leave
+        public const string UserList = "USER_LIST";   // danh sach online
         public const string CreateRoom = "CREATE_ROOM";
         public const string CreateRoomOk = "CREATE_ROOM_OK";
         public const string RoomExists = "ROOM_EXISTS";
@@ -41,9 +41,9 @@ namespace TCPIP_Collaborative_Chat_System.Shared
         public const string RoomUsers = "ROOM_USERS";
         public const string RoomHistory = "ROOM_HISTORY";
 
-        public const string DeleteRoom = "DELETE_ROOM";       // client ? server
-        public const string DeleteRoomOk = "DELETE_ROOM_OK";   // server ? owner
-        public const string DeleteRoomFail = "DELETE_ROOM_FAIL"; // server ? owner (l?i)
+        public const string DeleteRoom = "DELETE_ROOM";       // client -> server
+        public const string DeleteRoomOk = "DELETE_ROOM_OK";   // server -> owner
+        public const string DeleteRoomFail = "DELETE_ROOM_FAIL"; // server -> owner (loi)
         public const string RoomDeleted = "ROOM_DELETED";
         public const string FileBegin = "FILE_BEGIN";
         public const string FileChunk = "FILE_CHUNK";
@@ -52,6 +52,11 @@ namespace TCPIP_Collaborative_Chat_System.Shared
         public const string FileDownload = "FILE_DOWNLOAD";
         public const string FileData = "FILE_DATA";
 
+        // Reply & Forward
+        public const string ReplyMsg = "REPLY_MSG";
+        public const string PrivateReply = "PRIVATE_REPLY";
+        public const string ForwardMsg = "FORWARD_MSG";
+        public const string ForwardPrivate = "FORWARD_PRIVATE";
+        public const string DeleteMsg = "DELETE_MSG";
     }
-
 }

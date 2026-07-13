@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
 using System.Windows.Forms;
@@ -61,10 +62,15 @@ namespace TCPIP_Collaborative_Chat_System.Database
                 @"CREATE TABLE IF NOT EXISTS Messages
                 (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    MessageId TEXT UNIQUE,
                     RoomName TEXT,
                     Sender TEXT,
                     Content TEXT,
-                    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+                    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    IsReply INTEGER DEFAULT 0,
+                    ReplyMessageId TEXT,
+                    IsForward INTEGER DEFAULT 0,
+                    ForwardMessageId TEXT
                 );";
                 string createFiles =
                 @"CREATE TABLE IF NOT EXISTS Files
@@ -125,6 +131,52 @@ namespace TCPIP_Collaborative_Chat_System.Database
                             conn);
 
                     alter.ExecuteNonQuery();
+                }
+
+                // Upgrade Messages table
+                SQLiteCommand cmdMsg = new SQLiteCommand("PRAGMA table_info(Messages);", conn);
+                using (SQLiteDataReader readerMsg = cmdMsg.ExecuteReader())
+                {
+                    List<string> columns = new List<string>();
+                    while (readerMsg.Read())
+                    {
+                        columns.Add(readerMsg["name"].ToString());
+                    }
+                    if (!columns.Contains("MessageId"))
+                    {
+                        using (var alterCmd = new SQLiteCommand("ALTER TABLE Messages ADD COLUMN MessageId TEXT UNIQUE DEFAULT NULL;", conn))
+                        {
+                            alterCmd.ExecuteNonQuery();
+                        }
+                    }
+                    if (!columns.Contains("IsForward"))
+                    {
+                        using (var alterCmd = new SQLiteCommand("ALTER TABLE Messages ADD COLUMN IsForward INTEGER DEFAULT 0;", conn))
+                        {
+                            alterCmd.ExecuteNonQuery();
+                        }
+                    }
+                    if (!columns.Contains("IsReply"))
+                    {
+                        using (var alterCmd = new SQLiteCommand("ALTER TABLE Messages ADD COLUMN IsReply INTEGER DEFAULT 0;", conn))
+                        {
+                            alterCmd.ExecuteNonQuery();
+                        }
+                    }
+                    if (!columns.Contains("ReplyMessageId"))
+                    {
+                        using (var alterCmd = new SQLiteCommand("ALTER TABLE Messages ADD COLUMN ReplyMessageId TEXT DEFAULT NULL;", conn))
+                        {
+                            alterCmd.ExecuteNonQuery();
+                        }
+                    }
+                    if (!columns.Contains("ForwardMessageId"))
+                    {
+                        using (var alterCmd = new SQLiteCommand("ALTER TABLE Messages ADD COLUMN ForwardMessageId TEXT DEFAULT NULL;", conn))
+                        {
+                            alterCmd.ExecuteNonQuery();
+                        }
+                    }
                 }
             }
         }

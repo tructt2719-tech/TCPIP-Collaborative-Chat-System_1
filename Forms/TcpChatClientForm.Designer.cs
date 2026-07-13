@@ -33,6 +33,7 @@ namespace TCPIP_Collaborative_Chat_System
             this.numServerPort = new System.Windows.Forms.NumericUpDown();
             this.txtServerIP = new System.Windows.Forms.TextBox();
             this.btnConnect = new System.Windows.Forms.Button();
+            this.btnDisconnect = new System.Windows.Forms.Button();
             this.lblStatus = new System.Windows.Forms.Label();
             this.txtMessage = new System.Windows.Forms.RichTextBox();
             this.btnSendMessage = new System.Windows.Forms.Button();
@@ -102,14 +103,34 @@ namespace TCPIP_Collaborative_Chat_System
             // 
             // btnConnect
             // 
-            this.btnConnect.ForeColor = System.Drawing.Color.Black;
-            this.btnConnect.Location = new System.Drawing.Point(649, 16);
+            this.btnConnect.BackColor = System.Drawing.Color.FromArgb(40, 167, 69);
+            this.btnConnect.FlatAppearance.BorderSize = 0;
+            this.btnConnect.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnConnect.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.btnConnect.ForeColor = System.Drawing.Color.White;
+            this.btnConnect.Location = new System.Drawing.Point(606, 14);
             this.btnConnect.Name = "btnConnect";
-            this.btnConnect.Size = new System.Drawing.Size(94, 23);
+            this.btnConnect.Size = new System.Drawing.Size(90, 28);
             this.btnConnect.TabIndex = 4;
-            this.btnConnect.Text = "Kết nối";
-            this.btnConnect.UseVisualStyleBackColor = true;
+            this.btnConnect.Text = "⚡ Kết Nối";
+            this.btnConnect.UseVisualStyleBackColor = false;
             this.btnConnect.Click += new System.EventHandler(this.btnConnect_Click);
+            // 
+            // btnDisconnect
+            // 
+            this.btnDisconnect.BackColor = System.Drawing.Color.FromArgb(220, 53, 69);
+            this.btnDisconnect.FlatAppearance.BorderSize = 0;
+            this.btnDisconnect.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnDisconnect.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.btnDisconnect.ForeColor = System.Drawing.Color.White;
+            this.btnDisconnect.Location = new System.Drawing.Point(702, 14);
+            this.btnDisconnect.Name = "btnDisconnect";
+            this.btnDisconnect.Size = new System.Drawing.Size(90, 28);
+            this.btnDisconnect.TabIndex = 19;
+            this.btnDisconnect.Text = "✖ Ngắt Kết";
+            this.btnDisconnect.UseVisualStyleBackColor = false;
+            this.btnDisconnect.Enabled = false;
+            this.btnDisconnect.Click += new System.EventHandler(this.btnDisconnect_Click);
             // 
             // lblStatus
             // 
@@ -126,7 +147,6 @@ namespace TCPIP_Collaborative_Chat_System
             // 
             this.txtMessage.Location = new System.Drawing.Point(63, 521);
             this.txtMessage.Name = "txtMessage";
-            this.txtMessage.Size = new System.Drawing.Size(291, 31);
             this.txtMessage.Size = new System.Drawing.Size(279, 31);
             this.txtMessage.TabIndex = 6;
             this.txtMessage.Text = "";
@@ -332,6 +352,7 @@ namespace TCPIP_Collaborative_Chat_System
             this.Controls.Add(this.btnSendMessage);
             this.Controls.Add(this.txtMessage);
             this.Controls.Add(this.lblStatus);
+            this.Controls.Add(this.btnDisconnect);
             this.Controls.Add(this.btnConnect);
             this.Controls.Add(this.numServerPort);
             this.Controls.Add(this.txtServerIP);
@@ -340,8 +361,7 @@ namespace TCPIP_Collaborative_Chat_System
             this.ForeColor = System.Drawing.Color.Black;
             this.Name = "TcpChatClientForm";
             this.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.Text = "TcpChatClientForm";
-            this.TransparencyKey = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
+            this.Text = "TCP/IP Chat System";
             ((System.ComponentModel.ISupportInitialize)(this.numServerPort)).EndInit();
             this.grpRooms.ResumeLayout(false);
             this.grpRooms.PerformLayout();
@@ -377,5 +397,6 @@ namespace TCPIP_Collaborative_Chat_System
         private System.Windows.Forms.Button btnEmoji;
         private System.Windows.Forms.PictureBox picAvatar;
         private System.Windows.Forms.Button btnChangeAvatar;
+        private System.Windows.Forms.Button btnDisconnect;
     }
 }

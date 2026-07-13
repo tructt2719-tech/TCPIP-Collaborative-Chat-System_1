@@ -7,6 +7,7 @@ using System.Text;
 using System.Windows.Forms;
 using TCPIP_Collaborative_Chat_System.Shared;
 using System.IO;
+using TCPIP_Collaborative_Chat_System.Models;
 
 namespace TCPIP_Collaborative_Chat_System.Network
 {
@@ -21,11 +22,15 @@ namespace TCPIP_Collaborative_Chat_System.Network
         public event Action<string> OnLoginResult;
         public event Action<string> OnSystemMessage;
         public event Action<List<string>> OnUserListUpdated;
-        public event Action<string> OnRoomMessage;
+        public event Action<ChatMessage> OnRoomMsgReceived;
+        public event Action<ChatMessage> OnRoomHistoryReceived;
+        public event Action<ChatMessage> OnReplyMsgReceived;
+        public event Action<ChatMessage> OnForwardMsgReceived;
+        public event Action<ChatMessage> OnForwardPrivateReceived;
+        public event Action<Guid, string> OnDeleteMsgReceived;
         public event Action<string> OnRoomUsers;
         public event Action<string> OnRoomUserJoined;
         public event Action<string> OnRoomUserLeft;
-        public event Action<string> OnRoomHistory;
         public event Action<List<string>> OnRoomListReceived;
         public event Action<string> OnDeleteRoomResult;
         public event Action<string> OnRoomDeleted;
@@ -77,39 +82,18 @@ namespace TCPIP_Collaborative_Chat_System.Network
 
         public void Send(string senderName, string message)
         {
-            Socket socket = _socket;
-
-            if (socket == null || !socket.Connected)
-            {
-                OnStatusChanged?.Invoke("Chưa kết nối đến Server.");
-                return;
-            }
-
             if (string.IsNullOrWhiteSpace(message))
             {
                 return;
             }
-
-            try
-            {
-                string packet = PacketBuilder.BuildMessage(senderName, message);
-                byte[] buffer = Encoding.UTF8.GetBytes(packet);
-
-                socket.Send(buffer);
-            }
-            catch (Exception ex)
-            {
-                OnStatusChanged?.Invoke("Gửi tin nhắn thất bại: " + ex.Message);
-                HandleDisconnected(socket);
-            }
+            string packet = PacketBuilder.BuildMessage(senderName, message);
+            SendPacket(packet);
         }
 
         public void SendRoomMessage(string roomName, string message)
         {
-            if (!IsConnected)
-                return;
             string packet = $"ROOM_MSG|{roomName}|{message}\n";
-            _socket.Send(Encoding.UTF8.GetBytes(packet));
+            SendPacket(packet);
         }
 
         public void Disconnect()
@@ -212,7 +196,18 @@ namespace TCPIP_Collaborative_Chat_System.Network
 
                 ProcessReceiveBuffer(line =>
                 {
-                    string[] parts = PacketParser.Parse(line);
+                    string decryptedLine;
+                    try
+                    {
+                        decryptedLine = TCPIP_Collaborative_Chat_System.Services.EncryptionService.Decrypt(line);
+                    }
+                    catch (Exception ex)
+                    {
+                        OnStatusChanged?.Invoke($"[SECURITY ALERT] Decrypt failed: {ex.Message}");
+                        return;
+                    }
+
+                    string[] parts = PacketParser.Parse(decryptedLine);
                     if (parts.Length == 0) return;
 
                     string command = parts[0];
@@ -243,28 +238,158 @@ namespace TCPIP_Collaborative_Chat_System.Network
                             break;
 
                         case "ROOM_MSG":
-                            if (parts.Length >= 4)
+                            if (parts.Length >= 5)
                             {
-                                OnRoomMessage?.Invoke(
-                                    "[" + parts[1] + "] "
-                                    + parts[2]
-                                    + ": "
-                                    + parts[3]);
+                                Guid msgId;
+                                if (Guid.TryParse(parts[1], out msgId))
+                                {
+                                    string rName = parts[2];
+                                    string snd = parts[3];
+                                    string cnt = parts[4];
+                                    var msg = new ChatMessage
+                                    {
+                                        MessageId = msgId,
+                                        RoomName = rName,
+                                        Sender = snd,
+                                        Content = cnt,
+                                        Time = DateTime.Now,
+                                        IsReply = false,
+                                        ReplyMessageId = null,
+                                        IsForward = false,
+                                        ForwardMessageId = null
+                                    };
+                                    OnRoomMsgReceived?.Invoke(msg);
+                                }
                             }
                             break;
 
                         case "ROOM_HISTORY":
                             {
-                                if (parts.Length >= 5)
+                                if (parts.Length >= 6)
                                 {
-                                    OnRoomHistory?.Invoke(
-                                        "[" + parts[4] + "] "
-                                        + parts[2]
-                                        + ": "
-                                        + parts[3]);
+                                    string rName = parts[1];
+                                    string snd = parts[2];
+                                    string cnt = parts[3];
+                                    DateTime time;
+                                    if (DateTime.TryParse(parts[4], out time))
+                                    {
+                                        Guid msgId;
+                                        if (Guid.TryParse(parts[5], out msgId))
+                                        {
+                                            bool isReply = parts.Length > 6 && parts[6] == "1";
+                                            Guid? replyId = null;
+                                            Guid tempReplyId;
+                                            if (parts.Length > 7 && Guid.TryParse(parts[7], out tempReplyId))
+                                                replyId = tempReplyId;
+
+                                            bool isForward = parts.Length > 8 && parts[8] == "1";
+                                            Guid? fwdId = null;
+                                            Guid tempFwdId;
+                                            if (parts.Length > 9 && Guid.TryParse(parts[9], out tempFwdId))
+                                                fwdId = tempFwdId;
+
+                                            var msg = new ChatMessage
+                                            {
+                                                MessageId = msgId,
+                                                RoomName = rName,
+                                                Sender = snd,
+                                                Content = cnt,
+                                                Time = time,
+                                                IsReply = isReply,
+                                                ReplyMessageId = replyId,
+                                                IsForward = isForward,
+                                                ForwardMessageId = fwdId
+                                            };
+                                            OnRoomHistoryReceived?.Invoke(msg);
+                                        }
+                                    }
                                 }
                                 break;
                             }
+
+                        case "REPLY_MSG":
+                            if (parts.Length >= 6)
+                            {
+                                Guid msgId = Guid.Parse(parts[1]);
+                                Guid replyId = Guid.Parse(parts[2]);
+                                string rName = parts[3];
+                                string snd = parts[4];
+                                string cnt = parts[5];
+
+                                var msg = new ChatMessage
+                                {
+                                    MessageId = msgId,
+                                    RoomName = rName,
+                                    Sender = snd,
+                                    Content = cnt,
+                                    Time = DateTime.Now,
+                                    IsReply = true,
+                                    ReplyMessageId = replyId,
+                                    IsForward = false,
+                                    ForwardMessageId = null
+                                };
+                                OnReplyMsgReceived?.Invoke(msg);
+                            }
+                            break;
+
+                        case "FORWARD_MSG":
+                            if (parts.Length >= 6)
+                            {
+                                Guid msgId = Guid.Parse(parts[1]);
+                                Guid origId = Guid.Parse(parts[2]);
+                                string rName = parts[3];
+                                string snd = parts[4];
+                                string cnt = parts[5];
+
+                                var msg = new ChatMessage
+                                {
+                                    MessageId = msgId,
+                                    RoomName = rName,
+                                    Sender = snd,
+                                    Content = cnt,
+                                    Time = DateTime.Now,
+                                    IsReply = false,
+                                    ReplyMessageId = null,
+                                    IsForward = true,
+                                    ForwardMessageId = origId
+                                };
+                                OnForwardMsgReceived?.Invoke(msg);
+                            }
+                            break;
+
+                        case "FORWARD_PRIVATE":
+                            if (parts.Length >= 6)
+                            {
+                                Guid msgId = Guid.Parse(parts[1]);
+                                Guid origId = Guid.Parse(parts[2]);
+                                string targetUser = parts[3];
+                                string snd = parts[4];
+                                string cnt = parts[5];
+
+                                var msg = new ChatMessage
+                                {
+                                    MessageId = msgId,
+                                    RoomName = targetUser,
+                                    Sender = snd,
+                                    Content = cnt,
+                                    Time = DateTime.Now,
+                                    IsReply = false,
+                                    ReplyMessageId = null,
+                                    IsForward = true,
+                                    ForwardMessageId = origId
+                                };
+                                OnForwardPrivateReceived?.Invoke(msg);
+                            }
+                            break;
+
+                        case "DELETE_MSG":
+                            if (parts.Length >= 3)
+                            {
+                                Guid msgId = Guid.Parse(parts[1]);
+                                string rName = parts[2];
+                                OnDeleteMsgReceived?.Invoke(msgId, rName);
+                            }
+                            break;
 
                         case "ROOM_USERS":
                             if (parts.Length >= 2)
@@ -431,16 +556,7 @@ namespace TCPIP_Collaborative_Chat_System.Network
         public void Login(string username, string password)
         {
             string packet = $"{PacketTypes.Login}|{username}|{password}\n";
-            byte[] buffer = Encoding.UTF8.GetBytes(packet);
-            try
-            {
-                _socket?.Send(buffer);
-            }
-            catch (Exception ex)
-            {
-                OnStatusChanged?.Invoke(
-                    "Gửi login thất bại: " + ex.Message);
-            }
+            SendPacket(packet);
         }
 
         private static int IndexOfNewline(StringBuilder builder)
@@ -457,82 +573,110 @@ namespace TCPIP_Collaborative_Chat_System.Network
         }
         public void CreateRoom(string roomName, int maxUsers, bool isPrivate, string password)
         {
-            if (!IsConnected)
-                return;
-
-            string packet;
-
-            if (isPrivate)
-            {
-                packet =
-                    $"CREATE_ROOM|{roomName}|{maxUsers}|PRIVATE|{password}\n";
-            }
-            else
-            {
-                packet =
-                    $"CREATE_ROOM|{roomName}|{maxUsers}|PUBLIC\n";
-            }
-
-            _socket.Send(
-                Encoding.UTF8.GetBytes(packet));
+            string packet = isPrivate
+                ? $"CREATE_ROOM|{roomName}|{maxUsers}|PRIVATE|{password}\n"
+                : $"CREATE_ROOM|{roomName}|{maxUsers}|PUBLIC\n";
+            SendPacket(packet);
         }
 
         public void JoinRoom(string roomName, string password = "")
         {
-            if (!IsConnected)
-                return;
             string packet = $"JOIN_ROOM|{roomName}|{password}\n";
-            _socket.Send(Encoding.UTF8.GetBytes(packet));
+            SendPacket(packet);
         }
 
         public void LeaveRoom(string roomName)
         {
-            if (!IsConnected) return;
             string packet = $"LEAVE_ROOM|{roomName}\n";
-            _socket.Send(Encoding.UTF8.GetBytes(packet));
+            SendPacket(packet);
         }
         public void DeleteRoom(string roomName)
         {
-            if (!IsConnected) return;
             string packet = $"DELETE_ROOM|{roomName}\n";
-            _socket.Send(Encoding.UTF8.GetBytes(packet));
+            SendPacket(packet);
         }
-        public void SendFile(string filePath)
+        public void SendFile(string filePath, string roomName = "")
         {
             if (!File.Exists(filePath))
                 return;
 
-            byte[] fileData = File.ReadAllBytes(filePath);
+            try
+            {
+                byte[] fileData = File.ReadAllBytes(filePath);
+                string fileName = Path.GetFileName(filePath);
 
-            string fileName = Path.GetFileName(filePath);
+                // Header includes roomName so server can notify the room
+                string header = string.IsNullOrWhiteSpace(roomName)
+                    ? $"{PacketTypes.FileBegin}|{fileName}|{fileData.Length}\n"
+                    : $"{PacketTypes.FileBegin}|{fileName}|{fileData.Length}|{roomName}\n";
+                SendPacket(header);
 
-            string header =
-                $"{PacketTypes.FileBegin}|{fileName}|{fileData.Length}\n";
+                string base64 = Convert.ToBase64String(fileData);
+                string chunk = $"{PacketTypes.FileChunk}|{base64}\n";
+                SendPacket(chunk);
 
-            _socket.Send(Encoding.UTF8.GetBytes(header));
-            string base64 = Convert.ToBase64String(fileData);
-
-            string chunk =
-                $"{PacketTypes.FileChunk}|{base64}\n";
-
-            _socket.Send(
-                Encoding.UTF8.GetBytes(chunk));
-            string end = $"{PacketTypes.FileEnd}\n";
-
-            _socket.Send(
-                Encoding.UTF8.GetBytes(end));
+                string end = $"{PacketTypes.FileEnd}\n";
+                SendPacket(end);
+            }
+            catch (Exception ex)
+            {
+                OnStatusChanged?.Invoke("Lỗi gửi file: " + ex.Message);
+            }
         }
         public void DownloadFile(string fileName)
         {
-            if (!IsConnected)
-                return;
-
-            string packet =
-                PacketBuilder.BuildFileDownload(fileName);
-
-            _socket.Send(
-                Encoding.UTF8.GetBytes(packet));
+            string packet = PacketBuilder.BuildFileDownload(fileName);
+            SendPacket(packet);
         }
 
+        public void SendReply(string roomName, Guid replyToMessageId, string content)
+        {
+            Guid newMessageId = Guid.NewGuid();
+            string packet = PacketBuilder.BuildReplyMsg(newMessageId, replyToMessageId, roomName, Username, content);
+            SendPacket(packet);
+        }
+
+        public void SendForwardRoom(Guid originalMsgId, string targetRoom)
+        {
+            Guid newMessageId = Guid.NewGuid();
+            string packet = PacketBuilder.BuildForwardMsg(newMessageId, originalMsgId, targetRoom, Username);
+            SendPacket(packet);
+        }
+
+        public void SendForwardPrivate(Guid originalMsgId, string targetUser)
+        {
+            Guid newMessageId = Guid.NewGuid();
+            string packet = PacketBuilder.BuildForwardPrivate(newMessageId, originalMsgId, targetUser, Username);
+            SendPacket(packet);
+        }
+
+        public void SendDeleteMsg(Guid messageId, string roomName)
+        {
+            string packet = PacketBuilder.BuildDeleteMsg(messageId, roomName);
+            SendPacket(packet);
+        }
+
+        private void SendPacket(string plaintextPacket)
+        {
+            Socket socket = _socket;
+            if (socket == null || !socket.Connected)
+            {
+                OnStatusChanged?.Invoke("Chưa kết nối đến Server.");
+                return;
+            }
+
+            try
+            {
+                string cleanPacket = plaintextPacket.TrimEnd('\r', '\n');
+                string encryptedPacket = TCPIP_Collaborative_Chat_System.Services.EncryptionService.Encrypt(cleanPacket);
+                string lineToSend = encryptedPacket + "\n";
+                byte[] buffer = Encoding.UTF8.GetBytes(lineToSend);
+                socket.Send(buffer);
+            }
+            catch (Exception ex)
+            {
+                OnStatusChanged?.Invoke("Gửi packet thất bại: " + ex.Message);
+            }
+        }
     }
 }

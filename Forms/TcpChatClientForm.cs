@@ -17,18 +17,32 @@ namespace TCPIP_Collaborative_Chat_System
         private readonly string _username;
         private readonly string _password;
         private readonly bool _remember;
+
+        private readonly System.Collections.Generic.List<ChatMessage> _localMessageHistory = new System.Collections.Generic.List<ChatMessage>();
+        private readonly System.Collections.Generic.List<DisplayedMessageInfo> _displayedMessages = new System.Collections.Generic.List<DisplayedMessageInfo>();
+        private System.Collections.Generic.List<string> _onlineUsers = new System.Collections.Generic.List<string>();
+
+        private Panel pnlReplyHeader;
+        private Label lblReplyText;
+        private Button btnCancelReply;
+        private ChatMessage _currentReplyMessage = null;
+        private ChatMessage _selectedMessageForContext = null;
+        private ContextMenuStrip chatContextMenu;
+
         public TcpChatClientForm(string username, string password, bool remember)
         {
-            InitializeComponent();
-            CreateEmojiButtons();
-            LoadAvatar();
             _username = username;
             _password = password;
             _remember = remember;
+            InitializeComponent();
+            CreateEmojiButtons();
+            LoadAvatar();
             txtUsername.Text = username;
             txtUsername.Enabled = false;
             WireClientEvents();
             LoadConnectionSettings();
+            InitializeReplyUI();
+            InitializeContextMenu();
         }
         private void LoadConnectionSettings()
         {
@@ -54,22 +68,20 @@ namespace TCPIP_Collaborative_Chat_System
             foreach (string emoji in _emojis)
             {
                 Button btn = new Button();
-
-                btn.Width = 40;
-                btn.Height = 40;
-
+                btn.Width = 36;
+                btn.Height = 36;
                 btn.Text = emoji;
-
-                btn.Click += (s, e) =>
+                btn.FlatStyle = FlatStyle.Flat;
+                btn.FlatAppearance.BorderSize = 0;
+                btn.Font = new Font("Segoe UI Emoji", 14F);
+                btn.Cursor = Cursors.Hand;
+                btn.Click += (s, ev) =>
                 {
-                    txtMessage.Text += emoji;
-
+                    int selStart = txtMessage.SelectionStart;
+                    txtMessage.Text = txtMessage.Text.Insert(selStart, emoji);
+                    txtMessage.SelectionStart = selStart + emoji.Length;
                     txtMessage.Focus();
-
-                    txtMessage.SelectionStart =
-                        txtMessage.Text.Length;
                 };
-
                 flpEmoji.Controls.Add(btn);
             }
         }
@@ -124,7 +136,10 @@ namespace TCPIP_Collaborative_Chat_System
                 picAvatar.Image = null;
             }
 
-            picAvatar.Image = Image.FromFile(fullPath);
+            if (File.Exists(fullPath))
+            {
+                picAvatar.Image = Image.FromFile(fullPath);
+            }
         }
         private void btnConnect_Click(object sender, EventArgs e)
         {
@@ -174,9 +189,12 @@ namespace TCPIP_Collaborative_Chat_System
                 if (message.StartsWith("Kết nối thất bại"))
                 {
                     btnConnect.Enabled = true;
+                    btnDisconnect.Enabled = false;
                 }
                 if (message == "Kết nối thành công.")
                 {
+                    btnConnect.Enabled = false;
+                    btnDisconnect.Enabled = true;
                     if (_remember)
                     {
                         SettingsManager.Save(_username, true, txtServerIP.Text.Trim(), (int)numServerPort.Value);
@@ -194,6 +212,8 @@ namespace TCPIP_Collaborative_Chat_System
             {
                 UpdateStatus("Đã ngắt kết nối với Server.");
                 btnConnect.Enabled = true;
+                btnDisconnect.Enabled = false;
+                _currentRoom = "";
             });
 
             _client.OnLoginResult += result => SafeInvoke(() =>
@@ -211,14 +231,45 @@ namespace TCPIP_Collaborative_Chat_System
             _client.OnSystemMessage += msg => SafeInvoke(() =>
                 UpdateChatContent("--- " + msg + " ---"));
 
-            _client.OnUserListUpdated += users => SafeInvoke(() =>
-                UpdateStatus("Online: " + string.Join(", ", users)));
+            _client.OnUserListUpdated += users => SafeInvoke(() => {
+                _onlineUsers = users;
+                UpdateStatus("Online: " + string.Join(", ", users));
+            });
 
-            _client.OnRoomMessage += msg => SafeInvoke(() =>
-                UpdateChatContent(msg));
+            _client.OnRoomMsgReceived += msg => SafeInvoke(() => {
+                _localMessageHistory.Add(msg);
+                AppendMessageToUI(msg);
+            });
 
-            _client.OnRoomHistory += msg => SafeInvoke(() =>
-                UpdateChatContent(msg));
+            _client.OnRoomHistoryReceived += msg => SafeInvoke(() => {
+                _localMessageHistory.Add(msg);
+                AppendMessageToUI(msg);
+            });
+
+            _client.OnReplyMsgReceived += msg => SafeInvoke(() => {
+                _localMessageHistory.Add(msg);
+                AppendMessageToUI(msg);
+            });
+
+            _client.OnForwardMsgReceived += msg => SafeInvoke(() => {
+                _localMessageHistory.Add(msg);
+                AppendMessageToUI(msg);
+            });
+
+            _client.OnForwardPrivateReceived += msg => SafeInvoke(() => {
+                _localMessageHistory.Add(msg);
+                AppendMessageToUI(msg);
+            });
+
+            _client.OnDeleteMsgReceived += (msgId, roomName) => SafeInvoke(() => {
+                var msg = _localMessageHistory.Find(m => m.MessageId == msgId);
+                if (msg != null)
+                {
+                    msg.Content = "[Tin nhắn đã bị xóa]";
+                    RenderChatHistory();
+                }
+            });
+
             _client.OnRoomUserJoined += msg => SafeInvoke(() =>
                 UpdateChatContent("[ROOM] " + msg));
 
@@ -360,7 +411,15 @@ namespace TCPIP_Collaborative_Chat_System
                     MessageBox.Show("Bạn chưa tham gia phòng nào");
                     return;
                 }
-                _client.SendRoomMessage(_currentRoom, txtMessage.Text.Trim());
+                if (_currentReplyMessage != null)
+                {
+                    _client.SendReply(_currentRoom, _currentReplyMessage.MessageId, txtMessage.Text.Trim());
+                    CancelReply();
+                }
+                else
+                {
+                    _client.SendRoomMessage(_currentRoom, txtMessage.Text.Trim());
+                }
                 txtMessage.Clear();
             }
             catch (Exception ex)
@@ -399,6 +458,20 @@ namespace TCPIP_Collaborative_Chat_System
             }
         }
 
+        private void btnDisconnect_Click(object sender, EventArgs e)
+        {
+            if (!_client.IsConnected)
+            {
+                MessageBox.Show("Chưa kết nối đến Server!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            if (MessageBox.Show("Bạn có chắc muốn ngắt kết nối không?", "Xác nhận",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                _client.Disconnect();
+            }
+        }
+
         private void btnJoinRoom_Click(object sender, EventArgs e)
         {
             if (lstRooms.SelectedItem == null)
@@ -406,7 +479,14 @@ namespace TCPIP_Collaborative_Chat_System
                 MessageBox.Show("Chọn phòng trước");
                 return;
             }
-            RoomItem room = (RoomItem)lstRooms.SelectedItem;
+
+            RoomItem room = GetSelectedRoom();
+            if (room == null)
+            {
+                MessageBox.Show("Không thể xác định phòng được chọn.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
             string roomName = room.Name;
             string password = "";
 
@@ -421,6 +501,8 @@ namespace TCPIP_Collaborative_Chat_System
                 }
             }
             txtChatContent.Clear();
+            _localMessageHistory.Clear();
+            _displayedMessages.Clear();
             _client.JoinRoom(roomName, password);
             _currentRoom = room.Name;
         }
@@ -433,7 +515,12 @@ namespace TCPIP_Collaborative_Chat_System
                 return;
             }
 
-            RoomItem room = (RoomItem)lstRooms.SelectedItem;
+            RoomItem room = GetSelectedRoom();
+            if (room == null)
+            {
+                MessageBox.Show("Không thể xác định phòng được chọn.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
 
             if (MessageBox.Show($"Bạn có chắc muốn rời phòng '{room.Name}' ?", "Xác nhận rời phòng", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
@@ -443,11 +530,31 @@ namespace TCPIP_Collaborative_Chat_System
         }
         private void btnSendFile_Click(object sender, EventArgs e)
         {
+            if (!_client.IsConnected)
+            {
+                MessageBox.Show("Chưa kết nối đến Server!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(_currentRoom))
+            {
+                MessageBox.Show("Bạn chưa tham gia phòng nào!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             OpenFileDialog dlg = new OpenFileDialog();
+            dlg.Title = "Chọn file để gửi";
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                _client.SendFile(dlg.FileName);
+                try
+                {
+                    _client.SendFile(dlg.FileName, _currentRoom);
+                    UpdateChatContent($"[File] Đang gửi file: {System.IO.Path.GetFileName(dlg.FileName)}...");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Lỗi gửi file: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
         private void flowLayoutPanel1_Paint(object sender, PaintEventArgs e)
@@ -516,12 +623,240 @@ namespace TCPIP_Collaborative_Chat_System
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            RoomItem room = (RoomItem)lstRooms.SelectedItem;
+            RoomItem room = GetSelectedRoom();
+            if (room == null)
+            {
+                MessageBox.Show("Không thể xác định phòng được chọn.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             var confirm = MessageBox.Show($"Bạn có muốn xóa phòng \"{room.Name}\" không?\n\n" +
                 "Yes\n" + "No", "Xác nhận xóa phòng", MessageBoxButtons.YesNo,
                 MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
             if (confirm == DialogResult.Yes)
                 _client.DeleteRoom(room.Name);
+        }
+
+        /// <summary>Safely retrieves selected room from lstRooms, handling both RoomItem and string entries.</summary>
+        private RoomItem GetSelectedRoom()
+        {
+            object selected = lstRooms.SelectedItem;
+            if (selected is RoomItem ri)
+                return ri;
+            if (selected is string roomName)
+                return new RoomItem { Name = roomName, IsPrivate = false };
+            return null;
+        }
+
+        public class DisplayedMessageInfo
+        {
+            public ChatMessage Message { get; set; }
+            public int StartCharIndex { get; set; }
+            public int EndCharIndex { get; set; }
+        }
+
+        private void AppendMessageToUI(ChatMessage msg)
+        {
+            int start = txtChatContent.TextLength;
+
+            if (msg.IsReply && msg.ReplyMessageId.HasValue)
+            {
+                var orig = _localMessageHistory.Find(m => m.MessageId == msg.ReplyMessageId.Value);
+                string replyInfo = orig != null 
+                    ? (orig.Content == "[Tin nhắn đã bị xóa]" ? "Original message unavailable" : $"{orig.Sender}: \"{orig.Content}\"")
+                    : "Original message unavailable";
+                    
+                txtChatContent.SelectionColor = Color.Gray;
+                txtChatContent.SelectionFont = new Font(txtChatContent.Font.FontFamily, 8.5F, FontStyle.Italic);
+                txtChatContent.AppendText($"  ↪ {replyInfo}\n");
+            }
+            else if (msg.IsForward && msg.ForwardMessageId.HasValue)
+            {
+                txtChatContent.SelectionColor = Color.Gray;
+                txtChatContent.SelectionFont = new Font(txtChatContent.Font.FontFamily, 8.5F, FontStyle.Italic);
+                txtChatContent.AppendText($"  [Forwarded message]\n");
+            }
+
+            // Append main message header
+            txtChatContent.SelectionColor = msg.Sender == _username ? Color.Blue : Color.DarkGreen;
+            txtChatContent.SelectionFont = new Font(txtChatContent.Font, FontStyle.Bold);
+            
+            if (msg.RoomName == null) // DM Context
+            {
+                if (msg.Sender == _username)
+                {
+                    txtChatContent.AppendText($"[Private to {msg.RoomName}] {msg.Sender}: ");
+                }
+                else
+                {
+                    txtChatContent.AppendText($"[Private from {msg.Sender}]: ");
+                }
+            }
+            else
+            {
+                txtChatContent.AppendText($"{msg.Sender}: ");
+            }
+
+            // Append content
+            txtChatContent.SelectionColor = Color.Black;
+            txtChatContent.SelectionFont = new Font(txtChatContent.Font, FontStyle.Regular);
+            txtChatContent.AppendText(msg.Content + "\n");
+            
+            int end = txtChatContent.TextLength;
+            _displayedMessages.Add(new DisplayedMessageInfo { Message = msg, StartCharIndex = start, EndCharIndex = end });
+            
+            txtChatContent.SelectionStart = txtChatContent.TextLength;
+            txtChatContent.ScrollToCaret();
+        }
+
+        private void RenderChatHistory()
+        {
+            txtChatContent.Clear();
+            _displayedMessages.Clear();
+            foreach (var msg in _localMessageHistory)
+            {
+                AppendMessageToUI(msg);
+            }
+        }
+
+        private void InitializeReplyUI()
+        {
+            pnlReplyHeader = new Panel
+            {
+                Size = new Size(txtMessage.Width, 24),
+                Location = new Point(txtMessage.Left, txtMessage.Top - 26),
+                BackColor = Color.FromArgb(240, 240, 240),
+                Visible = false
+            };
+
+            lblReplyText = new Label
+            {
+                Text = "",
+                AutoSize = false,
+                Size = new Size(pnlReplyHeader.Width - 30, 20),
+                Location = new Point(3, 2),
+                Font = new Font("Segoe UI", 8F, FontStyle.Italic)
+            };
+
+            btnCancelReply = new Button
+            {
+                Text = "✕",
+                Size = new Size(20, 20),
+                Location = new Point(pnlReplyHeader.Width - 24, 2),
+                FlatStyle = FlatStyle.Flat
+            };
+            btnCancelReply.FlatAppearance.BorderSize = 0;
+            btnCancelReply.Click += (s, e) => CancelReply();
+
+            pnlReplyHeader.Controls.Add(lblReplyText);
+            pnlReplyHeader.Controls.Add(btnCancelReply);
+            this.Controls.Add(pnlReplyHeader);
+            pnlReplyHeader.BringToFront();
+        }
+
+        private void CancelReply()
+        {
+            _currentReplyMessage = null;
+            pnlReplyHeader.Visible = false;
+            lblReplyText.Text = "";
+        }
+
+        private void InitializeContextMenu()
+        {
+            chatContextMenu = new ContextMenuStrip();
+            ToolStripMenuItem menuReply = new ToolStripMenuItem("Reply", null, MenuReply_Click);
+            ToolStripMenuItem menuForward = new ToolStripMenuItem("Forward", null, MenuForward_Click);
+            ToolStripMenuItem menuCopy = new ToolStripMenuItem("Copy", null, MenuCopy_Click);
+            ToolStripMenuItem menuDelete = new ToolStripMenuItem("Delete", null, MenuDelete_Click);
+
+            chatContextMenu.Items.AddRange(new ToolStripItem[] { menuReply, menuForward, menuCopy, menuDelete });
+            txtChatContent.ContextMenuStrip = chatContextMenu;
+            txtChatContent.MouseDown += TxtChatContent_MouseDown;
+        }
+
+        private void TxtChatContent_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                int charIndex = txtChatContent.GetCharIndexFromPosition(e.Location);
+                var dispMsg = _displayedMessages.Find(m => charIndex >= m.StartCharIndex && charIndex < m.EndCharIndex);
+                if (dispMsg != null)
+                {
+                    _selectedMessageForContext = dispMsg.Message;
+                    chatContextMenu.Items[3].Enabled = (_selectedMessageForContext.Sender == _username);
+                }
+                else
+                {
+                    _selectedMessageForContext = null;
+                }
+            }
+        }
+
+        private void MenuReply_Click(object sender, EventArgs e)
+        {
+            if (_selectedMessageForContext == null) return;
+            _currentReplyMessage = _selectedMessageForContext;
+            pnlReplyHeader.Visible = true;
+            lblReplyText.Text = $"↪ Replying to {_currentReplyMessage.Sender}: \"{_currentReplyMessage.Content}\"";
+            txtMessage.Focus();
+        }
+
+        private void MenuCopy_Click(object sender, EventArgs e)
+        {
+            if (_selectedMessageForContext == null) return;
+            Clipboard.SetText(_selectedMessageForContext.Content);
+        }
+
+        private void MenuForward_Click(object sender, EventArgs e)
+        {
+            if (_selectedMessageForContext == null) return;
+            
+            System.Collections.Generic.List<string> rooms = new System.Collections.Generic.List<string>();
+            foreach (var item in lstRooms.Items)
+            {
+                if (item is RoomItem roomItem)
+                {
+                    rooms.Add(roomItem.Name);
+                }
+                else if (item is string rStr)
+                {
+                    rooms.Add(rStr);
+                }
+            }
+
+            System.Collections.Generic.List<string> otherUsers = new System.Collections.Generic.List<string>();
+            if (_onlineUsers != null)
+            {
+                foreach (var u in _onlineUsers)
+                {
+                    if (!u.Equals(_username, StringComparison.OrdinalIgnoreCase))
+                    {
+                        otherUsers.Add(u);
+                    }
+                }
+            }
+
+            Forms.ForwardForm dlg = new Forms.ForwardForm(rooms, otherUsers);
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                if (dlg.IsUserForward)
+                {
+                    _client.SendForwardPrivate(_selectedMessageForContext.MessageId, dlg.SelectedDestination);
+                }
+                else
+                {
+                    _client.SendForwardRoom(_selectedMessageForContext.MessageId, dlg.SelectedDestination);
+                }
+            }
+        }
+
+        private void MenuDelete_Click(object sender, EventArgs e)
+        {
+            if (_selectedMessageForContext == null) return;
+            var confirm = MessageBox.Show("Bạn có muốn xóa tin nhắn này không?", "Xác nhận xóa", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (confirm == DialogResult.Yes)
+            {
+                _client.SendDeleteMsg(_selectedMessageForContext.MessageId, _selectedMessageForContext.RoomName);
+            }
         }
     }
 }

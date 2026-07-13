@@ -22,6 +22,18 @@ namespace TCPIP_Collaborative_Chat_System.Network
             if (Socket.Connected)
                 Socket.Send(data);
         }
+
+        public void SendPacket(string plaintextPacket)
+        {
+            if (Socket.Connected)
+            {
+                string cleanPacket = plaintextPacket.TrimEnd('\r', '\n');
+                string encryptedPacket = TCPIP_Collaborative_Chat_System.Services.EncryptionService.Encrypt(cleanPacket);
+                string lineToSend = encryptedPacket + "\n";
+                byte[] buffer = Encoding.UTF8.GetBytes(lineToSend);
+                Socket.Send(buffer);
+            }
+        }
         public void Close()
         {
             try { Socket.Shutdown(SocketShutdown.Both); } catch { }

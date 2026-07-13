@@ -105,16 +105,13 @@ namespace TCPIP_Collaborative_Chat_System.Network
 
         public void Broadcast(string packet)
         {
-            if (!packet.EndsWith("\n")) packet += "\n";
-            byte[] buffer = Encoding.UTF8.GetBytes(packet);
-
             lock (_clients)
             {
                 foreach (var client in _clients.ToList())
                 {
                     try
                     {
-                        client.Send(buffer);
+                        client.SendPacket(packet);
                     }
                     catch
                     {
@@ -168,7 +165,18 @@ namespace TCPIP_Collaborative_Chat_System.Network
 
                 ProcessReceiveBuffer(handler, line =>
                 {
-                    string[] parts = PacketParser.Parse(line);
+                    string decryptedLine;
+                    try
+                    {
+                        decryptedLine = TCPIP_Collaborative_Chat_System.Services.EncryptionService.Decrypt(line);
+                    }
+                    catch (Exception ex)
+                    {
+                        OnStatusChanged?.Invoke($"[SECURITY ALERT] Decrypt failed: {ex.Message}");
+                        return;
+                    }
+
+                    string[] parts = PacketParser.Parse(decryptedLine);
                     if (parts.Length == 0) return;
 
                     string command = parts[0];
@@ -228,7 +236,7 @@ namespace TCPIP_Collaborative_Chat_System.Network
 
                         File.WriteAllBytes(filePath, data);
                         FileRepository.SaveFile(handler.CurrentRoom, handler.Username, _currentFileName, filePath, data.Length);
-                        string packet =
+                        string fileInfoPacket =
                             PacketBuilder.BuildFileInfo(
                                 handler.CurrentRoom,
                                 handler.Username,
@@ -248,8 +256,7 @@ namespace TCPIP_Collaborative_Chat_System.Network
                                 OnStatusChanged?.Invoke(
                                     $"Send FILE_INFO -> {client.Username}");
 
-                                client.Send(
-                                    Encoding.UTF8.GetBytes(packet));
+                                client.SendPacket(fileInfoPacket);
                             }
                         }
 
@@ -351,11 +358,52 @@ namespace TCPIP_Collaborative_Chat_System.Network
                     }
                     if (command == PacketTypes.RoomMsg && parts.Length >= 3)
                     {
-                        HandleRoomMessage(
-                            handler,
-                            parts[1],
-                            parts[2]);
-
+                        if (parts.Length >= 5)
+                        {
+                            Guid msgId;
+                            Guid.TryParse(parts[1], out msgId);
+                            if (msgId == Guid.Empty) msgId = Guid.NewGuid();
+                            HandleRoomMessage(handler, msgId, parts[2], parts[4]);
+                        }
+                        else
+                        {
+                            HandleRoomMessage(handler, Guid.NewGuid(), parts[1], parts[2]);
+                        }
+                        return;
+                    }
+                    if (command == PacketTypes.ReplyMsg && parts.Length >= 6)
+                    {
+                        Guid newMsgId = Guid.Parse(parts[1]);
+                        Guid replyToId = Guid.Parse(parts[2]);
+                        string roomName = parts[3];
+                        string senderName = parts[4];
+                        string content = parts[5];
+                        HandleReplyMessage(handler, newMsgId, replyToId, roomName, senderName, content);
+                        return;
+                    }
+                    if (command == PacketTypes.ForwardMsg && parts.Length >= 5)
+                    {
+                        Guid newMsgId = Guid.Parse(parts[1]);
+                        Guid origMsgId = Guid.Parse(parts[2]);
+                        string targetRoom = parts[3];
+                        string senderName = parts[4];
+                        HandleForwardMsg(handler, newMsgId, origMsgId, targetRoom, senderName);
+                        return;
+                    }
+                    if (command == PacketTypes.ForwardPrivate && parts.Length >= 5)
+                    {
+                        Guid newMsgId = Guid.Parse(parts[1]);
+                        Guid origMsgId = Guid.Parse(parts[2]);
+                        string targetUser = parts[3];
+                        string senderName = parts[4];
+                        HandleForwardPrivate(handler, newMsgId, origMsgId, targetUser, senderName);
+                        return;
+                    }
+                    if (command == PacketTypes.DeleteMsg && parts.Length >= 3)
+                    {
+                        Guid msgId = Guid.Parse(parts[1]);
+                        string roomName = parts[2];
+                        HandleDeleteMsg(handler, msgId, roomName);
                         return;
                     }
                     if (command == PacketTypes.GetRooms)
@@ -530,14 +578,11 @@ namespace TCPIP_Collaborative_Chat_System.Network
         //method broadcast chỉ cho loggedin users
         public void BroadcastToLoggedIn(string packet)
         {
-            if (!packet.EndsWith("\n")) packet += "\n";
-            byte[] buffer = Encoding.UTF8.GetBytes(packet);
-
             lock (_clients)
             {
                 foreach (var client in _clients.Where(c => c.IsLoggedIn).ToList())
                 {
-                    try { client.Send(buffer); }
+                    try { client.SendPacket(packet); }
                     catch { }
                 }
             }
@@ -546,8 +591,7 @@ namespace TCPIP_Collaborative_Chat_System.Network
         // method gửi cho 1 client
         private void SendTo(ClientHandler handler, string packet)
         {
-            if (!packet.EndsWith("\n")) packet += "\n";
-            try { handler.Send(Encoding.UTF8.GetBytes(packet)); }
+            try { handler.SendPacket(packet); }
             catch { }
         }
         private static int IndexOfNewline(StringBuilder builder)
@@ -661,12 +705,11 @@ namespace TCPIP_Collaborative_Chat_System.Network
             lock (room.Members) { members = room.Members.ToList(); }
 
             // Thông báo ROOM_DELETED cho tất cả thành viên đang ở phòng
-            byte[] deletedBuf = Encoding.UTF8.GetBytes(
-                PacketBuilder.BuildRoomDeleted(roomName, handler.Username));
+            string deletedPacket = PacketBuilder.BuildRoomDeleted(roomName, handler.Username);
             foreach (var m in members)
             {
                 m.CurrentRoom = null;           
-                try { m.Send(deletedBuf); } catch { }
+                try { m.SendPacket(deletedPacket); } catch { }
             }
 
             // Xóa khỏi danh sách rooms
@@ -725,10 +768,10 @@ namespace TCPIP_Collaborative_Chat_System.Network
             OnStatusChanged?.Invoke($"[JOIN] {handler.Username} -> {roomName}");
             SendTo(handler, PacketBuilder.BuildJoinRoomOk(roomName));
             
-            List<MessageModel> history = MessageRepository.GetMessages(roomName);
-            foreach (MessageModel msg in history)
+            List<ChatMessage> history = MessageRepository.GetMessages(roomName);
+            foreach (ChatMessage msg in history)
             {
-                SendTo(handler, PacketBuilder.BuildRoomHistory(roomName, msg.Sender, msg.Content, msg.CreatedAt.ToString()));
+                SendTo(handler, PacketBuilder.BuildRoomHistory(roomName, msg.Sender, msg.Content, msg.Time.ToString(), msg.MessageId, msg.IsReply, msg.ReplyMessageId, msg.IsForward, msg.ForwardMessageId));
             }
             SendRoomMembers(handler, room);
             BroadcastRoomSystem(room, $"{handler.Username} joined {roomName}");
@@ -757,7 +800,7 @@ namespace TCPIP_Collaborative_Chat_System.Network
             HandleGetRooms(handler);
             OnStatusChanged?.Invoke($"[LEAVE] {handler.Username} <- {roomName}");
         }
-        private void HandleRoomMessage(ClientHandler handler, string roomName, string message)
+        private void HandleRoomMessage(ClientHandler handler, Guid messageId, string roomName, string message)
         {
             ChatRoom room = FindRoom(roomName);
             if (room == null)
@@ -767,11 +810,23 @@ namespace TCPIP_Collaborative_Chat_System.Network
                 SendTo(handler, PacketBuilder.BuildSystem("Bạn chưa tham gia room này"));
                 return;
             }
-            // Lưu tin nhắn vào SQLite
-            MessageRepository.SaveMessage(roomName, handler.Username, message);
-            string packet = $"ROOM_MSG|{roomName}|{handler.Username}|{message}\n";
 
-            byte[] buffer = Encoding.UTF8.GetBytes(packet);
+            ChatMessage chatMsg = new ChatMessage
+            {
+                MessageId = messageId,
+                RoomName = roomName,
+                Sender = handler.Username,
+                Content = message,
+                Time = DateTime.Now,
+                IsReply = false,
+                ReplyMessageId = null,
+                IsForward = false,
+                ForwardMessageId = null
+            };
+
+            // Lưu tin nhắn vào SQLite
+            MessageRepository.SaveMessage(chatMsg);
+            string packet = PacketBuilder.BuildRoomMsg(chatMsg.MessageId, roomName, handler.Username, message);
 
             lock (room.Members)
             {
@@ -779,7 +834,7 @@ namespace TCPIP_Collaborative_Chat_System.Network
                 {
                     try
                     {
-                        member.Send(buffer);
+                        member.SendPacket(packet);
                     }
                     catch
                     {
@@ -787,6 +842,147 @@ namespace TCPIP_Collaborative_Chat_System.Network
                 }
             }
             OnMessageReceived?.Invoke($"[{roomName}] {handler.Username}: {message}");
+        }
+        private void HandleReplyMessage(ClientHandler handler, Guid newMsgId, Guid replyToId, string roomName, string senderName, string content)
+        {
+            ChatRoom room = FindRoom(roomName);
+            if (room == null) return;
+            if (handler.CurrentRoom != roomName)
+            {
+                SendTo(handler, PacketBuilder.BuildSystem("Bạn chưa tham gia room này"));
+                return;
+            }
+
+            string error;
+            if (!TCPIP_Collaborative_Chat_System.Services.ReplyService.ValidateReply(replyToId, out error))
+            {
+                SendTo(handler, PacketBuilder.BuildSystem("Lỗi: MESSAGE_NOT_FOUND"));
+                return;
+            }
+
+            ChatMessage chatMsg = TCPIP_Collaborative_Chat_System.Services.ReplyService.CreateReplyMessage(newMsgId, replyToId, roomName, handler.Username, content);
+
+            // Save to SQLite
+            MessageRepository.SaveMessage(chatMsg);
+
+            // Format packet to broadcast: REPLY_MSG|newMsgId|replyToId|roomName|senderName|content
+            string packet = PacketBuilder.BuildReplyMsg(chatMsg.MessageId, replyToId, roomName, handler.Username, content);
+
+            lock (room.Members)
+            {
+                foreach (var member in room.Members)
+                {
+                    try { member.SendPacket(packet); } catch { }
+                }
+            }
+            OnMessageReceived?.Invoke($"[{roomName}] (Reply) {handler.Username}: {content}");
+        }
+        private void HandleForwardMsg(ClientHandler handler, Guid newMsgId, Guid origMsgId, string targetRoomName, string senderName)
+        {
+            ChatRoom room = FindRoom(targetRoomName);
+            if (room == null) return;
+            
+            var origMsg = MessageRepository.GetMessageById(origMsgId);
+            if (origMsg == null || origMsg.Content == "[Tin nhắn đã bị xóa]")
+            {
+                SendTo(handler, PacketBuilder.BuildSystem("Lỗi: Không tìm thấy tin nhắn gốc để chuyển tiếp"));
+                return;
+            }
+
+            ChatMessage chatMsg = TCPIP_Collaborative_Chat_System.Services.ForwardService.CreateForwardMessage(newMsgId, origMsgId, targetRoomName, handler.Username, origMsg.Content);
+            MessageRepository.SaveMessage(chatMsg);
+
+            // Send to targetRoom members: FORWARD_MSG|NewMessageId|OriginalMessageId|TargetRoom|Sender|Content
+            string packet = $"FORWARD_MSG|{newMsgId}|{origMsgId}|{targetRoomName}|{handler.Username}|{origMsg.Content}\n";
+
+            lock (room.Members)
+            {
+                foreach (var member in room.Members)
+                {
+                    try { member.SendPacket(packet); } catch { }
+                }
+            }
+            OnMessageReceived?.Invoke($"[{targetRoomName}] (Forward) {handler.Username}: {origMsg.Content}");
+        }
+
+        private void HandleForwardPrivate(ClientHandler handler, Guid newMsgId, Guid origMsgId, string targetUser, string senderName)
+        {
+            var origMsg = MessageRepository.GetMessageById(origMsgId);
+            if (origMsg == null || origMsg.Content == "[Tin nhắn đã bị xóa]")
+            {
+                SendTo(handler, PacketBuilder.BuildSystem("Lỗi: Không tìm thấy tin nhắn gốc để chuyển tiếp"));
+                return;
+            }
+
+            ChatMessage chatMsg = TCPIP_Collaborative_Chat_System.Services.ForwardService.CreateForwardMessage(newMsgId, origMsgId, null, handler.Username, origMsg.Content);
+            chatMsg.RoomName = targetUser; // Save target recipient in RoomName column
+            MessageRepository.SaveMessage(chatMsg);
+
+            // Send packet to targetUser and sender: FORWARD_PRIVATE|NewMessageId|OriginalMessageId|TargetUser|Sender|Content
+            string packet = $"FORWARD_PRIVATE|{newMsgId}|{origMsgId}|{targetUser}|{handler.Username}|{origMsg.Content}\n";
+
+            lock (_clients)
+            {
+                foreach (var client in _clients)
+                {
+                    if (client.IsLoggedIn && (client.Username.Equals(targetUser, StringComparison.OrdinalIgnoreCase) || client.Username.Equals(handler.Username, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        try { client.SendPacket(packet); } catch { }
+                    }
+                }
+            }
+            OnMessageReceived?.Invoke($"[Private Forward] {handler.Username} -> {targetUser}: {origMsg.Content}");
+        }
+
+        private void HandleDeleteMsg(ClientHandler handler, Guid messageId, string roomName)
+        {
+            var msg = MessageRepository.GetMessageById(messageId);
+            if (msg == null) return;
+
+            // Only sender can delete their message
+            if (!msg.Sender.Equals(handler.Username, StringComparison.OrdinalIgnoreCase))
+            {
+                SendTo(handler, PacketBuilder.BuildSystem("Lỗi: Bạn chỉ có thể xóa tin nhắn của chính mình"));
+                return;
+            }
+
+            // Mark message as deleted in Database by updating content (or we can delete it, but updating content preserves history references)
+            msg.Content = "[Tin nhắn đã bị xóa]";
+            MessageRepository.DeleteMessage(messageId);
+            MessageRepository.SaveMessage(msg);
+
+            // Broadcast: DELETE_MSG|messageId|roomName
+            string packet = PacketBuilder.BuildDeleteMsg(messageId, roomName);
+
+            if (string.IsNullOrEmpty(roomName)) // DM context
+            {
+                // Send delete to targetUser (saved in RoomName in database) and sender
+                lock (_clients)
+                {
+                    foreach (var client in _clients)
+                    {
+                        if (client.IsLoggedIn && (client.Username.Equals(msg.RoomName, StringComparison.OrdinalIgnoreCase) || client.Username.Equals(handler.Username, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            try { client.SendPacket(packet); } catch { }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                ChatRoom room = FindRoom(roomName);
+                if (room != null)
+                {
+                    lock (room.Members)
+                    {
+                        foreach (var member in room.Members)
+                        {
+                            try { member.SendPacket(packet); } catch { }
+                        }
+                    }
+                }
+            }
+            OnMessageReceived?.Invoke($"[{roomName ?? "Private"}] Tin nhắn đã bị xóa bởi {handler.Username}");
         }
         private void SendRoomMembers(ClientHandler handler, ChatRoom room)
         {
@@ -817,14 +1013,13 @@ namespace TCPIP_Collaborative_Chat_System.Network
         private void BroadcastRoomUserJoined(ChatRoom room, string username)
         {
             string packet = PacketBuilder.BuildRoomUserJoined(room.RoomName, username);
-            byte[] buffer = Encoding.UTF8.GetBytes(packet);
             lock (room.Members)
             {
                 foreach (var member in room.Members)
                 {
                     try
                     {
-                        member.Send(buffer);
+                        member.SendPacket(packet);
                     }
                     catch
                     {
@@ -835,14 +1030,13 @@ namespace TCPIP_Collaborative_Chat_System.Network
         private void BroadcastRoomUserLeft(ChatRoom room, string username)
         {
             string packet = PacketBuilder.BuildRoomUserLeft(room.RoomName, username);
-            byte[] buffer = Encoding.UTF8.GetBytes(packet);
             lock (room.Members)
             {
                 foreach (var member in room.Members)
                 {
                     try
                     {
-                        member.Send(buffer);
+                        member.SendPacket(packet);
                     }
                     catch
                     {
@@ -869,14 +1063,13 @@ namespace TCPIP_Collaborative_Chat_System.Network
         private void BroadcastRoomSystem(ChatRoom room, string message)
         {
             string packet = PacketBuilder.BuildSystem(message);
-            byte[] buffer = Encoding.UTF8.GetBytes(packet);
             lock (room.Members)
             {
                 foreach (var member in room.Members)
                 {
                     try
                     {
-                        member.Send(buffer);
+                        member.SendPacket(packet);
                     }
                     catch
                     {
@@ -893,11 +1086,10 @@ namespace TCPIP_Collaborative_Chat_System.Network
                     .Select(m => m.Username).ToList();
             }
             string packet = PacketBuilder.BuildRoomUsers(room.RoomName, users);
-            byte[] buf = Encoding.UTF8.GetBytes(packet);
             lock (room.Members)
             {
                 foreach (var m in room.Members)
-                    try { m.Send(buf); } catch { }
+                    try { m.SendPacket(packet); } catch { }
             }
         }
     }

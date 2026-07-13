@@ -40,10 +40,7 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Data.SQLite, Version=1.0.119.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
       <HintPath>packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\lib\net46\System.Data.SQLite.dll</HintPath>
-<<<<<<< HEAD
       <Private>True</Private>
-=======
->>>>>>> origin/main
     </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -87,9 +84,12 @@
     <Compile Include="Forms\StartupForm.Designer.cs">
       <DependentUpon>StartupForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\ForwardForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Models\AppMode.cs" />
     <Compile Include="Models\ChatRoom.cs" />
-    <Compile Include="Models\MessageModel.cs" />
+    <Compile Include="Models\ChatMessage.cs" />
     <Compile Include="Models\PacketModel.cs" />
     <Compile Include="Models\RoomItem.cs" />
     <Compile Include="Models\UserModel.cs" />
@@ -113,6 +113,9 @@
     <Compile Include="Services\FileTransferService.cs" />
     <Compile Include="Services\MessageService.cs" />
     <Compile Include="Services\UIService.cs" />
+    <Compile Include="Services\ReplyService.cs" />
+    <Compile Include="Services\ForwardService.cs" />
+    <Compile Include="Services\EncryptionService.cs" />
     <Compile Include="Shared\EncodingHelper.cs" />
     <Compile Include="Shared\PacketBuilder.cs" />
     <Compile Include="Shared\PacketParser.cs" />
@@ -165,7 +168,9 @@
     <Content Include=".gitignore" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Avatars\" />
+    <Content Include="Avatars\default.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Folder Include="Extra\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

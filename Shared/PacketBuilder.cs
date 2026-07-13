@@ -72,9 +72,11 @@ namespace TCPIP_Collaborative_Chat_System.Shared
         {
             return $"REGISTER_FAIL|{reason}\n";
         }
-        public static string BuildRoomHistory(string roomName, string sender, string content, string time)
+        public static string BuildRoomHistory(string roomName, string sender, string content, string time, Guid messageId, bool isReply, Guid? replyToMessageId, bool isForward, Guid? forwardMessageId)
         {
-            return $"ROOM_HISTORY|{roomName}|{sender}|{content}|{time}\n";
+            string replyIdStr = replyToMessageId.HasValue ? replyToMessageId.Value.ToString() : "";
+            string forwardIdStr = forwardMessageId.HasValue ? forwardMessageId.Value.ToString() : "";
+            return $"ROOM_HISTORY|{roomName}|{sender}|{content}|{time}|{messageId}|{(isReply ? 1 : 0)}|{replyIdStr}|{(isForward ? 1 : 0)}|{forwardIdStr}\n";
         }
 
         public static string BuildDeleteRoomOk(string roomName)
@@ -102,5 +104,24 @@ namespace TCPIP_Collaborative_Chat_System.Shared
         {
             return $"FILE_DATA|{fileName}|{base64}\n";
         }
+
+        // Reply & Forward
+        public static string BuildRoomMsg(Guid messageId, string roomName, string sender, string content)
+            => $"ROOM_MSG|{messageId}|{roomName}|{sender}|{content}\n";
+
+        public static string BuildReplyMsg(Guid newMessageId, Guid replyToMessageId, string roomName, string sender, string content)
+            => $"REPLY_MSG|{newMessageId}|{replyToMessageId}|{roomName}|{sender}|{content}\n";
+
+        public static string BuildPrivateReply(Guid newMessageId, Guid replyToMessageId, string targetUser, string sender, string content)
+            => $"PRIVATE_REPLY|{newMessageId}|{replyToMessageId}|{targetUser}|{sender}|{content}\n";
+
+        public static string BuildForwardMsg(Guid newMessageId, Guid originalMessageId, string targetRoom, string sender)
+            => $"FORWARD_MSG|{newMessageId}|{originalMessageId}|{targetRoom}|{sender}\n";
+
+        public static string BuildForwardPrivate(Guid newMessageId, Guid originalMessageId, string targetUser, string sender)
+            => $"FORWARD_PRIVATE|{newMessageId}|{originalMessageId}|{targetUser}|{sender}\n";
+
+        public static string BuildDeleteMsg(Guid messageId, string roomName)
+            => $"DELETE_MSG|{messageId}|{roomName}\n";
     }
 }
