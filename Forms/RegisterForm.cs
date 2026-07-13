@@ -7,7 +7,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using TCPIP_Collaborative_Chat_System.Services.Security;
 using TCPIP_Collaborative_Chat_System.Database;
 
 namespace TCPIP_Collaborative_Chat_System.Forms

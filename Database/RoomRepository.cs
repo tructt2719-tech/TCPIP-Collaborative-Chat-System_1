@@ -2,7 +2,6 @@
 using System.Data.SQLite;
 using TCPIP_Collaborative_Chat_System.Models;
 
-
 namespace TCPIP_Collaborative_Chat_System.Database
 {
     public class RoomRepository

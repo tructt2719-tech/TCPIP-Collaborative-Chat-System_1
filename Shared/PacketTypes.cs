@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,9 +11,52 @@ namespace TCPIP_Collaborative_Chat_System.Shared
         public const string Login = "LOGIN";
         public const string LoginOk = "LOGIN_OK";
         public const string LoginFail = "LOGIN_FAIL";
+        public const string Register = "REGISTER";
+        public const string RegisterOk = "REGISTER_OK";
+        public const string RegisterFail = "REGISTER_FAIL";
+
         public const string Message = "MESSAGE";
         public const string Disconnect = "DISCONNECT";
-        public const string System = "SYSTEM";      // thông báo user join/leave
-        public const string UserList = "USER_LIST";   // danh sách online
+        public const string System = "SYSTEM";      // thong bao user join/leave
+        public const string UserList = "USER_LIST";   // danh sach online
+        public const string CreateRoom = "CREATE_ROOM";
+        public const string CreateRoomOk = "CREATE_ROOM_OK";
+        public const string RoomExists = "ROOM_EXISTS";
+        public const string JoinRoom = "JOIN_ROOM";
+        public const string JoinRoomOk = "JOIN_ROOM_OK";
+
+        public const string LeaveRoom = "LEAVE_ROOM";
+        public const string LeaveRoomOk = "LEAVE_ROOM_OK";
+
+        public const string RoomList = "ROOM_LIST";
+
+        public const string RoomMsg = "ROOM_MSG";
+
+        public const string RoomCreated = "ROOM_CREATED";
+
+        public const string RoomUserJoined = "ROOM_USER_JOINED";
+        public const string RoomUserLeft = "ROOM_USER_LEFT";
+
+        public const string GetRooms = "GET_ROOMS";
+        public const string RoomUsers = "ROOM_USERS";
+        public const string RoomHistory = "ROOM_HISTORY";
+
+        public const string DeleteRoom = "DELETE_ROOM";       // client -> server
+        public const string DeleteRoomOk = "DELETE_ROOM_OK";   // server -> owner
+        public const string DeleteRoomFail = "DELETE_ROOM_FAIL"; // server -> owner (loi)
+        public const string RoomDeleted = "ROOM_DELETED";
+        public const string FileBegin = "FILE_BEGIN";
+        public const string FileChunk = "FILE_CHUNK";
+        public const string FileEnd = "FILE_END";
+        public const string FileInfo = "FILE_INFO";
+        public const string FileDownload = "FILE_DOWNLOAD";
+        public const string FileData = "FILE_DATA";
+
+        // Reply & Forward
+        public const string ReplyMsg = "REPLY_MSG";
+        public const string PrivateReply = "PRIVATE_REPLY";
+        public const string ForwardMsg = "FORWARD_MSG";
+        public const string ForwardPrivate = "FORWARD_PRIVATE";
+        public const string DeleteMsg = "DELETE_MSG";
     }
 }

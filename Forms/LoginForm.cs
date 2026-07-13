@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using TCPIP_Collaborative_Chat_System.Models;
 using TCPIP_Collaborative_Chat_System.Database;
-using TCPIP_Collaborative_Chat_System.Services.Security;
 using TCPIP_Collaborative_Chat_System.Client;
 
 namespace TCPIP_Collaborative_Chat_System.Forms

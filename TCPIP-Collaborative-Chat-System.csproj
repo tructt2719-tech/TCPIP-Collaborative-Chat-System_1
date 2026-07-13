@@ -12,6 +12,9 @@
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -35,6 +38,10 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data.SQLite, Version=1.0.119.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <HintPath>packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\lib\net46\System.Data.SQLite.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -46,11 +53,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-<<<<<<< Updated upstream
-=======
     <Compile Include="Client\SettingsManager.cs" />
     <Compile Include="Database\DatabaseManager.cs" />
+    <Compile Include="Database\FileRepository.cs" />
     <Compile Include="Database\MessageRepository.cs" />
+    <Compile Include="Database\PasswordHasher.cs" />
     <Compile Include="Database\RoomRepository.cs" />
     <Compile Include="Database\UserRepository.cs" />
     <Compile Include="Forms\CreateRoomForm.cs">
@@ -71,15 +78,20 @@
     <Compile Include="Forms\RegisterForm.Designer.cs">
       <DependentUpon>RegisterForm.cs</DependentUpon>
     </Compile>
->>>>>>> Stashed changes
     <Compile Include="Forms\StartupForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\StartupForm.Designer.cs">
       <DependentUpon>StartupForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Models\MessageModel.cs" />
+    <Compile Include="Forms\ForwardForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Models\AppMode.cs" />
+    <Compile Include="Models\ChatRoom.cs" />
+    <Compile Include="Models\ChatMessage.cs" />
     <Compile Include="Models\PacketModel.cs" />
+    <Compile Include="Models\RoomItem.cs" />
     <Compile Include="Models\UserModel.cs" />
     <Compile Include="Network\ChatClientManager.cs" />
     <Compile Include="Network\ClientHandler.cs" />
@@ -98,16 +110,26 @@
     <Compile Include="Forms\TcpChatServerForm.Designer.cs">
       <DependentUpon>TcpChatServerForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Services\FileTransferService.cs" />
     <Compile Include="Services\MessageService.cs" />
-    <Compile Include="Services\Security\EncryptionService.cs" />
-    <Compile Include="Services\Security\PasswordHasher.cs" />
-    <Compile Include="Services\Security\SecurityConfig.cs" />
     <Compile Include="Services\UIService.cs" />
+    <Compile Include="Services\ReplyService.cs" />
+    <Compile Include="Services\ForwardService.cs" />
+    <Compile Include="Services\EncryptionService.cs" />
     <Compile Include="Shared\EncodingHelper.cs" />
     <Compile Include="Shared\PacketBuilder.cs" />
     <Compile Include="Shared\PacketParser.cs" />
     <Compile Include="Shared\PacketTypes.cs" />
     <Compile Include="Utils\UIHelper.cs" />
+    <EmbeddedResource Include="Forms\CreateRoomForm.resx">
+      <DependentUpon>CreateRoomForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\LoginForm.resx">
+      <DependentUpon>LoginForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\RegisterForm.resx">
+      <DependentUpon>RegisterForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\StartupForm.resx">
       <DependentUpon>StartupForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -119,6 +141,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <EmbeddedResource Include="Forms\TcpChatClientForm.resx">
       <DependentUpon>TcpChatClientForm.cs</DependentUpon>
@@ -126,6 +149,7 @@
     <EmbeddedResource Include="Forms\TcpChatServerForm.resx">
       <DependentUpon>TcpChatServerForm.cs</DependentUpon>
     </EmbeddedResource>
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -143,5 +167,19 @@
   <ItemGroup>
     <Content Include=".gitignore" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Avatars\default.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Folder Include="Extra\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets" Condition="Exists('packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets'))" />
+  </Target>
+  <Import Project="packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets" Condition="Exists('packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets')" />
 </Project>
